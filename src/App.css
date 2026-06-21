@@ -1,38 +1,199 @@
-.App {
+/* src/LCKPlayers.css */
+.App{
+  background-color: rgba(0, 0, 0, 0.884);
+}
+.lck-main-content {
+  padding: 40px 20px;
+  background-color: #f8f9fa; /* 밝은 배경색 */
+  min-height: calc(100vh - 60px); /* Navbar 높이를 제외한 최소 높이 */
+  box-sizing: border-box;
+}
+
+.lck-players-container {
+  max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 부드러운 그림자 효과 */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.lck-players-container h2 {
+  font-size: 2.5em;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.section-description {
+  font-size: 1.1em;
+  color: #666;
+  margin-bottom: 30px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.search-bar {
+  margin-bottom: 30px;
+}
+
+.search-bar input {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 18px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-size: 1em;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar input:focus {
+  border-color: #6a0dad; /* 포커스 시 보라색 테두리 */
+  box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2); /* 포커스 시 그림자 강조 */
+}
+
+/* 새로 추가된 팀 섹션 관련 스타일 */
+.team-list-wrapper {
+  margin-top: 30px;
+}
+
+.team-section {
+  background-color: #ffffff; /* 팀 섹션 배경색 */
+  margin-bottom: 40px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden; /* 자식 요소의 마진이 넘치지 않게 */
+  padding: 20px; /* 내부 여백 추가 */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+
+.team-title {
+  font-size: 2.2em;
+  color: #6a0dad; /* 팀 이름 강조 색상 */
+  margin-bottom: 25px;
+  margin-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0; /* 팀 이름 아래 구분선 */
+  text-align: left; /* 왼쪽 정렬 */
+  padding-left: 15px; /* 왼쪽 여백 */
+  font-weight: 700;
+}
+
+.team-player-list { /* 이전 .player-list에서 이름 변경 */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 반응형 그리드, 카드 크기 조절 */
+  gap: 20px; /* 카드 간격 조절 */
+  padding: 10px; /* 카드 리스트 전체 여백 */
+}
+
+.player-card {
+  background-color: #fefefe;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 100%; /* 카드 높이를 같게 */
+  justify-content: space-between; /* 내용 분산 */
+}
+
+.player-card:hover {
+  transform: translateY(-8px); /* 마우스 호버 시 살짝 떠오르는 효과 */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* 그림자 강조 */
+}
+
+.player-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%; /* 원형 이미지 */
+  object-fit: cover;
+  margin-bottom: 15px;
+  border: 4px solid #6a0dad; /* 보라색 테두리 */
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.player-info {
+  width: 100%;
+  flex-grow: 1; /* info 영역이 남은 공간을 차지하도록 */
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.player-name {
+  font-size: 1.5em; /* 선수 이름 글자 크기 조절 */
+  color: #333;
+  margin-bottom: 5px; /* 간격 조절 */
+  font-weight: 600;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.player-team { /* 이제 팀 이름은 카드 안에서 직접 보여주지 않을 거라 삭제해도 됩니다. */
+  display: none;
+}
+
+.player-role {
+  font-size: 1em;
+  color: #555;
+  margin-bottom: 10px; /* 간격 조절 */
+}
+
+.player-description {
+  font-size: 0.9em;
+  color: #777;
+  margin-top: auto; /* 설명을 하단에 배치 */
+  line-height: 1.5;
+}
+
+.no-results {
+  font-size: 1.2em;
+  color: #888;
+  padding: 50px 0;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* 모바일 화면 최적화 */
+@media (max-width: 768px) {
+  .lck-players-container h2 {
+    font-size: 2em;
   }
-  to {
-    transform: rotate(360deg);
+  .team-title {
+    font-size: 1.8em;
+  }
+  .team-player-list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  .player-card {
+    padding: 15px;
+  }
+  .player-image {
+    width: 100px;
+    height: 100px;
+  }
+  .player-name {
+    font-size: 1.3em;
+  }
+}
+
+@media (max-width: 480px) {
+  .lck-main-content {
+    padding: 20px 10px;
+  }
+  .lck-players-container {
+    padding: 20px;
+  }
+  .team-player-list {
+    grid-template-columns: 1fr; /* 한 줄에 한 카드만 표시 */
+  }
+  .search-bar input {
+    max-width: 100%;
   }
 }

@@ -1,0 +1,236 @@
+/* App.css 개선된 스타일 */
+
+/* 공통 폰트 */
+body, button, input {
+  font-family: 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 내비게이션 바 */
+.main-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #1a1a1a, #222);
+  color: #f0f0f0;
+  padding: 12px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  backdrop-filter: saturate(180%) blur(20px); /* 유리창 느낌 */
+}
+
+/* 로고 */
+.navbar-logo h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  color: #fffefc;
+  transition: color 0.3s ease;
+}
+.navbar-logo h1:hover {
+  color: #f39c12;
+}
+
+/* 메뉴 */
+.navbar-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 30px; /* 간격 조절 */
+}
+
+.navbar-menu .nav-item {
+  position: relative;
+}
+
+.navbar-menu .nav-item > a {
+  color: #e6e6e6;
+  text-decoration: none;
+  padding: 12px 0;
+  display: block;
+  font-weight: 500;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.navbar-menu .nav-item > a:hover {
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12cc;
+}
+
+/* 상세메뉴 (드롭다운) */
+.navbar-menu .submenu {
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
+  background-color: #2b2b2b;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  min-width: 180px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s ease;
+  z-index: 1001;
+}
+
+.navbar-menu .nav-item:hover .submenu {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.navbar-menu .submenu li a {
+  color: #ddd;
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+  font-weight: 400;
+  font-size: 15px;
+  transition: background-color 0.25s ease;
+  border-radius: 5px;
+}
+
+.navbar-menu .submenu li a:hover {
+  background-color: #3c3c3c;
+}
+
+/* 로그인 버튼 */
+.navbar-auth button {
+  background: linear-gradient(135deg, #0069d9, #0056b3);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 17px;
+  box-shadow: 0 4px 12px rgba(0, 105, 217, 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar-auth button:hover {
+  background: linear-gradient(135deg, #0050a3, #003d7a);
+  box-shadow: 0 6px 18px rgba(0, 80, 163, 0.7);
+}
+
+/* 로그인 모달 오버레이 */
+.login-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  animation: fadeInOverlay 0.3s ease forwards;
+}
+
+@keyframes fadeInOverlay {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+/* 로그인 모달 내용 */
+.login-modal-content {
+  background-color: #fafafa;
+  padding: 35px 35px 40px 35px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  width: 340px;
+  max-width: 90vw;
+  text-align: left;
+  animation: slideDownModal 0.4s ease forwards;
+}
+
+@keyframes slideDownModal {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.login-modal-content h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+
+.login-modal-content .form-group {
+  margin-bottom: 18px;
+}
+
+.login-modal-content label {
+  display: block;
+  margin-bottom: 7px;
+  color: #555;
+  font-weight: 600;
+}
+
+.login-modal-content input[type="text"],
+.login-modal-content input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 7px;
+  font-size: 15px;
+  outline-color: #007bff;
+  transition: border-color 0.3s ease;
+}
+
+.login-modal-content input[type="text"]:focus,
+.login-modal-content input[type="password"]:focus {
+  border-color: #007bff;
+}
+
+/* 폼 버튼 */
+.login-modal-content button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.login-modal-content button[type="submit"] {
+  background-color: #28a745;
+  color: white;
+}
+
+.login-modal-content button[type="submit"]:hover {
+  background-color: #218838;
+  box-shadow: 0 6px 20px rgba(33, 136, 56, 0.6);
+}
+
+.login-modal-content button[type="button"],
+.login-modal-content .signup-button {
+  background-color: #6c757d;
+  color: white;
+  margin-top: 8px;
+}
+
+.login-modal-content button[type="button"]:hover,
+.login-modal-content .signup-button:hover {
+  background-color: #5a6268;
+}

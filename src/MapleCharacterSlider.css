@@ -1,0 +1,123 @@
+.slider-container {
+  max-width: 1500px;
+  margin: 30px auto;
+  font-family: 'Malgun Gothic', sans-serif;
+}
+
+.input-area {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.input-area input {
+  width: 70%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.input-area button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #686868;
+  color: rgb(34, 34, 34);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.input-area button:disabled {
+  background-color: #ffffff;
+  cursor: not-allowed;
+}
+
+.slider-wrapper {
+  overflow-x: hidden;
+  position: relative;
+}
+
+.slider {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.5s ease;
+  overflow: hidden; /* 슬라이더 영역 밖으로 카드가 넘치지 않도록 */
+  padding-bottom: 20px; /* 하단 여유 공간 확보 */
+}
+
+.card {
+  flex: 0 0 14%; /* 카드 너비를 조금 줄여줌 */
+  background-color: #fffffffd;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(131, 131, 131, 0.3);
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  opacity: 0.9;
+}
+
+.card:hover {
+  transform: scale(1.05); /* 호버 시 살짝 확대 */
+  z-index: 10; /* 겹칠 때 위로 보이게 */
+}
+.character-image {
+  width: 100%;
+    height: 220px; /* 기존 180px에서 220px로 키움 */
+  background-color: rgb(41, 41, 41);
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(58, 58, 58, 0.3);
+}
+
+.character-image:hover {
+  transform: scale(1.1);
+}
+
+.character-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1e2444fa;
+  margin-bottom: 8px;
+}
+
+.character-info {
+  font-size: 14px;
+  color: #000000;
+  margin-bottom: 6px;
+}
+
+.nav-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.nav-buttons button {
+  margin: 0 8px;
+  padding: 6px 16px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #277bdb83;
+  background-color: #fff;
+  color: #8180df;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-buttons button:disabled {
+  border-color: #96e4f1;
+  color: #89b7d6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 12px;
+}

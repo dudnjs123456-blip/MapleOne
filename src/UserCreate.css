@@ -1,0 +1,94 @@
+/* src/UserCreate.css */
+
+.user-create-page {
+  max-width: 500px; /* 폼의 최대 너비 지정 */
+  margin: 50px auto; /* 가운데 정렬 및 상단 여백 */
+  padding: 40px; /* 내부 여백 */
+  background-color: #f9f9f9; /* 배경색 */
+  border-radius: 10px; /* 모서리 둥글게 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+}
+
+.user-create-page h2 {
+  font-size: 2em; /* 제목 크기 */
+  color: #333; /* 제목 색상 */
+  margin-bottom: 20px; /* 아래 여백 */
+}
+
+.user-create-page p {
+  color: #666; /* 설명 텍스트 색상 */
+  margin-bottom: 30px; /* 아래 여백 */
+  font-size: 1.1em;
+}
+
+.user-create-page form {
+  display: flex;
+  flex-direction: column; /* 폼 요소들을 세로로 정렬 */
+  gap: 15px; /* 요소들 사이 간격 */
+}
+
+.form-group {
+  text-align: left; /* 라벨과 인풋은 왼쪽 정렬 */
+}
+
+.form-group label {
+  display: block; /* 라벨을 블록 요소로 만들어 줄바꿈 */
+  margin-bottom: 8px; /* 라벨 아래 여백 */
+  font-weight: bold; /* 글자 두껍게 */
+  color: #555;
+  font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+  width: calc(100% - 20px); /* 패딩 고려한 너비 */
+  padding: 12px 10px; /* 내부 여백 */
+  border: 1px solid #ddd; /* 테두리 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 1em; /* 글자 크기 */
+  transition: border-color 0.3s ease; /* 호버 시 테두리 색상 변화 부드럽게 */
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+  border-color: #007bff; /* 포커스 시 테두리 색상 변경 */
+  outline: none; /* 기본 아웃라인 제거 */
+}
+
+.user-create-page button[type="submit"] {
+  width: 100%; /* 버튼 너비 */
+  padding: 15px 20px; /* 내부 여백 */
+  background-color: #28a745; /* 버튼 배경색 (로그인 모달과 통일) */
+  color: white; /* 글자색 */
+  border: none; /* 테두리 없음 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 1.1em; /* 글자 크기 */
+  cursor: pointer; /* 마우스 오버 시 커서 변경 */
+  margin-top: 20px; /* 상단 여백 */
+  transition: background-color 0.3s ease; /* 호버 시 색상 변화 부드럽게 */
+}
+
+.user-create-page button[type="submit"]:hover {
+  background-color: #218838; /* 호버 시 배경색 변경 */
+}
+
+/* 뒤로 가기 버튼 스타일 (필요시 활성화) */
+/*
+.user-create-page button.back-button {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.user-create-page button.back-button:hover {
+  background-color: #5a6268;
+}
+*/
