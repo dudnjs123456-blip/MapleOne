@@ -234,3 +234,62 @@ body, button, input {
 .login-modal-content .signup-button:hover {
   background-color: #5a6268;
 }
+
+/* 내비게이션 바 반응형 처리 */
+@media screen and (max-width: 1200px) {
+  .main-navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 20px;
+  }
+
+  .navbar-logo h1 {
+    font-size: 1rem;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .navbar-menu {
+    display: none; /* 메뉴 숨기기, 필요 시 햄버거 메뉴 대체 구현 */
+  }
+
+  .navbar-auth {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .navbar-auth button,
+  .navbar-auth span {
+    font-size: 0.9rem;
+  }
+}
+
+/* 로그인 모달 반응형 처리 */
+@media screen and (max-width: 768px) {
+  .login-modal-content {
+    width: 90vw;          /* 화면 너비 90% */
+    padding: 15px 20px;
+    border-radius: 10px;
+  }
+
+  .login-modal-content h2 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+
+  .login-modal-content .form-group label,
+  .login-modal-content .form-group input {
+    font-size: 0.9rem;
+  }
+
+  .login-modal-content button {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+  }
+
+  .login-modal-content button[type="submit"] {
+    margin-top: 12px;
+  }
+}

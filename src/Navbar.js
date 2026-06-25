@@ -63,7 +63,7 @@ function Navbar() {
     <>
       <header className="main-navbar">
         <div className="navbar-logo">
-          <h1>My Logo</h1>
+          <h1>MapleStory One</h1>
         </div>
         <nav className="navbar-menu">{/* 기존 메뉴 유지 */}</nav>
         <div className="navbar-auth">

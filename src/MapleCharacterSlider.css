@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap');
 .slider-container {
   max-width: 1500px;
   margin: 30px auto;
@@ -40,6 +41,7 @@
   position: relative;
 }
 
+
 .slider {
   display: flex;
   gap: 24px;
@@ -74,6 +76,37 @@
   margin-bottom: 14px;
   transition: transform 0.3s ease;
     box-shadow: 0 4px 10px rgba(58, 58, 58, 0.3);
+}
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
+
+
+.Mainn1 {
+  font-family: 'Black Han Sans', sans-serif;
+  font-weight: 400;
+  font-size: 54px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+  text-align: center;
+
+  /* 아래쪽 마진 추가 */
+  margin-bottom: 8px; /* 원하는 만큼 조절해보세요 */
+  /* 필요 시 display: block 설정 확인 */
+  display: block;
+}
+
+.Mainn2 {
+  margin: 0;
+  font-family: Pretendard, Noto Sans KR, sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: white;
+  text-align: center;
+
+  /* 위쪽 마진으로 간격 조절 시도 가능 */
+  margin-top: 4px; /* 필요에 따라 조절 */
+  display: block;
 }
 
 .character-image:hover {

@@ -93,8 +93,8 @@ export default function MapleCharacterSlider() {
 
   return (
     <div className="slider-container">
-      <h2>메이플스토리 캐릭터 슬라이드</h2>
-
+      <h2 className='Mainn1'>메이플스토리 One</h2>
+            <h3 className='Mainn2'>메이플스토리 캐릭터 정보 검색 서비스</h3>  
       <div className="input-area">
         <input
           type="text"
@@ -152,23 +152,27 @@ export default function MapleCharacterSlider() {
         </div>
       </div>
 
-      <div className="nav-buttons" style={{ marginTop: 20, textAlign: 'center' }}>
-        <button
-          onClick={() => setCurrentPage(p => Math.max(p - 1, 0))}
-          disabled={currentPage === 0 || loading || detailLoading}
-          style={{ marginRight: 10 }}
-        >
-          이전
-        </button>
-        <span>{currentPage + 1} / {totalPages}</span>
-        <button
-          onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages - 1))}
-          disabled={currentPage >= totalPages - 1 || loading || detailLoading}
-          style={{ marginLeft: 10 }}
-        >
-          다음
-        </button>
-      </div>
+   <div className="nav-buttons" style={{ marginTop: 20, textAlign: 'center' }}>
+  {currentChars.length > 0 && (
+    <>
+      <button
+        onClick={() => setCurrentPage(p => Math.max(p - 1, 0))}
+        disabled={currentPage === 0 || loading || detailLoading}
+        style={{ marginRight: 10 }}
+      >
+        이전
+      </button>
+      <span>{currentPage + 1} / {totalPages}</span>
+      <button
+        onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages - 1))}
+        disabled={currentPage >= totalPages - 1 || loading || detailLoading}
+        style={{ marginLeft: 10 }}
+      >
+        다음
+      </button>
+    </>
+  )}
+</div>
     </div>
   );
 }
