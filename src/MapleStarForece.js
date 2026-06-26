@@ -183,8 +183,236 @@ export default function MapleStarForece() {
     return map;
   }, [groupedItems]);
 
+    const [mvpCategory, setMvpCategory] = useState('');
+  const [pcBangDiscount, setPcBangDiscount] = useState('');
+  const [destroyPrevention, setDestroyPrevention] = useState('');
+
+  // 선택지 배열
+  const mvpOptions = ['없음', '실버', '골드'];
+  const pcBangOptions = ['있음', '없음'];
+  const destroyPreventionOptions = ['15', '16', '17', '없음'];
+
+
+  // 아이템 레벨과 노작값 상태 (한번만 받음)
+  const [itemLevel, setItemLevel] = useState('');
+  const [noMakeValue, setNoMakeValue] = useState('');
+    const [itemDetails, setItemDetails] = useState({});
+
+    const level160Data = {
+  "15→16": {
+    successRate: "30%",
+    failureRate: "67.9%",
+    destroyRate: "2.1%",
+    baseCost: 36514500,
+    totalCost: "6억 1392만 9489",
+    avgAttempts: 0.07000,
+    noDestroySuccessRate: "93.4579%"
+  },
+  "16→17": {
+    successRate: "30%",
+    failureRate: "67.9%",
+    destroyRate: "2.1%",
+    baseCost: 43008300,
+    totalCost: "8억 9141만 3446",
+    avgAttempts: 0.14490,
+    noDestroySuccessRate: "87.3439%"
+  },
+  "17→18": {
+    successRate: "15%",
+    failureRate: "78.2%",
+    destroyRate: "6.8%",
+    baseCost: 66913100,
+    totalCost: "23억 3189만 9323",
+    avgAttempts: 0.66392,
+    noDestroySuccessRate: "60.0990%"
+  },
+  "18→19": {
+    successRate: "15%",
+    failureRate: "78.2%",
+    destroyRate: "6.8%",
+    baseCost: 165920200,
+    totalCost: "50억 8545만 2798",
+    avgAttempts: 1.41823,
+    noDestroySuccessRate: "41.3525%"
+  },
+  "19→20": {
+    successRate: "15%",
+    failureRate: "76.5%",
+    destroyRate: "8.5%",
+    baseCost: 296435300,
+    totalCost: "106억 8130만 8612",
+    avgAttempts: 2.78856,
+    noDestroySuccessRate: "26.3952%"
+  },
+  "20→21": {
+    successRate: "30%",
+    failureRate: "59.5%",
+    destroyRate: "10.5%",
+    baseCost: 76090000,
+    totalCost: "151억 2913만 9423",
+    avgAttempts: 4.11456,
+    noDestroySuccessRate: "19.5520%"
+  },
+  "21→22": {
+    successRate: "15%",
+    failureRate: "72.25%",
+    destroyRate: "12.75%",
+    baseCost: 138036600,
+    totalCost: "300억 1594만 7774",
+    avgAttempts: 8.46194,
+    noDestroySuccessRate: "10.5687%"
+  },
+  "22→23": {
+    successRate: "15%",
+    failureRate: "68%",
+    destroyRate: "17%",
+    baseCost: 97274600,
+    totalCost: "661억 5824만 7040",
+    avgAttempts: 19.1855,
+    noDestroySuccessRate: "4.95406%"
+  },
+  "23→24": {
+    successRate: "10%",
+    failureRate: "72%",
+    destroyRate: "18%",
+    baseCost: 109120000,
+    totalCost: "1886억 7809만 4669",
+    avgAttempts: 55.5193,
+    noDestroySuccessRate: "1.76931%"
+  },
+  "24→25": {
+    successRate: "10%",
+    failureRate: "72%",
+    destroyRate: "18%",
+    baseCost: 121834900,
+    totalCost: "5318억 6081만 7030",
+    avgAttempts: 157.254,
+    noDestroySuccessRate: "0.63190%"
+  },
+  "25→26": {
+    successRate: "10%",
+    failureRate: "72%",
+    destroyRate: "18%",
+    baseCost: 135444400,
+    totalCost: "1조 4929억 853만 4643",
+    avgAttempts: 442.111,
+    noDestroySuccessRate: "0.22568%"
+  },
+  "26→27": {
+    successRate: "7%",
+    failureRate: "74.4%",
+    destroyRate: "18.6%",
+    baseCost: 149973700,
+    totalCost: "5조 4653억 8216만 4869",
+    avgAttempts: 1619.52,
+    noDestroySuccessRate: "0.06171%"
+  },
+  "27→28": {
+    successRate: "5%",
+    failureRate: "76%",
+    destroyRate: "19%",
+    baseCost: 165447100,
+    totalCost: "26조 2420억 9136만 1836",
+    avgAttempts: 7777.5,
+    noDestroySuccessRate: "0.01286%"
+  },
+  "28→29": {
+    successRate: "3%",
+    failureRate: "77.6%",
+    destroyRate: "19.4%",
+    baseCost: 181889200,
+    totalCost: "195조 9554억 3213만 7524",
+    avgAttempts: 58078.5,
+    noDestroySuccessRate: "0.00172%"
+  },
+  "29→30": {
+    successRate: "1%",
+    failureRate: "79.2%",
+    destroyRate: "19.8%",
+    baseCost: 199324000,
+    totalCost: "4075조 9187억 269만 3036",
+    avgAttempts: 1208052,
+    noDestroySuccessRate: "0.00008%"
+  }
+};
+   // 저장 시 해당 아이템 키별 상태 전체 출력
+const handleSave = (itemName) => {
+  // 현재 displayItems 배열에서 클릭한 itemName에 해당하는 그룹 찾기
+  const group = displayItems.find(g => g.itemName === itemName);
+  if (!group) {
+    console.warn("해당 아이템 데이터를 찾을 수 없습니다:", itemName);
+    return;
+  }
+
+  console.log("저장 버튼 눌린 아이템:", itemName);
+  console.log("현재 선택 상태:");
+  console.log("MVP 할인 카테고리:", mvpCategory);
+  console.log("PC방 할인:", pcBangDiscount);
+  console.log("파괴방지:", destroyPrevention);
+  console.log("아이템 레벨:", itemLevel);
+  console.log("노작값:", noMakeValue);
+
+  if (itemLevel === '160') {
+    console.log(`== 레벨 ${itemLevel} 구간별 시행 횟수와 베이스 비용 ==`);
+    Object.entries(level160Data).forEach(([range, data]) => {
+      console.log(`${range} :  베이스 비용 = ${data.baseCost}원`);
+    });
+  } else {
+    console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
+  }
+
+
+  const transitions = group.transitions;
+
+  // 각 강화 구간별 시도횟수 정리
+  const attemptsSummary = [];
+
+  Object.entries(transitions).forEach(([fromStar, toObj]) => {
+    Object.entries(toObj).forEach(([toStar, stat]) => {
+      attemptsSummary.push({
+        section: `${fromStar}성 → ${toStar}성`,
+        attempts: stat.attempts || 0,
+      });
+    });
+  });
+
+  console.log(`=== [${itemName}] 강화 구간별 총 시도횟수 ===`);
+  attemptsSummary.forEach(({ section, attempts }) => {
+    console.log(`${section}: ${attempts}회`);
+  });
+};
+
+
+
+  const formatMoneyUnit = (numStr) => {
+    if (!numStr) return '';
+
+    const num = parseInt(numStr, 10);
+    if (isNaN(num) || num <= 0) return '';
+
+    const units = [
+      '1원 메소', '10원 메소', '100원 메소', '1000원 메소',
+      '1만원 메소', '10만 메소', '100만 메소',
+      '천만 메소', '억 메소', '10억 메소', '100억 메소','1000억 메소',
+      '1조 메소', '10조 메소', '100조 메소',
+      '1경 메소', '10경 메소', '100경 메소', '해 메소'
+    ];
+
+    const length = numStr.length;
+    const index = Math.min(length - 1, units.length - 1);
+    return units[index];
+  };
+
+const isSaveDisabled = !(
+  mvpCategory &&
+  pcBangDiscount &&
+  destroyPrevention &&
+  itemLevel &&
+  noMakeValue
+);
+
   return (
-<div style={{ maxWidth: 1600, margin: "0 auto", padding: 20 }}>
+<div style={{ maxWidth: 1600, margin: "0 auto", padding: 20, display: "block" }}>
   {/* apiKey가 있을 때 날짜 입력 UI 보여줌 */}
   {apiKey && (
     <label>
@@ -202,7 +430,7 @@ export default function MapleStarForece() {
   {/* starforceData가 있을 때만 데이터 관련 UI 보여줌 */}
   {starforceData && starforceData.starforce_history?.length > 0 && (
     <>
-      <label style={{ marginTop: 15, display: "block" }}>
+      <label style={{ marginTop: 15,}}>
         아이템 선택:{" "}
         <select 
           value={selectedItem} 
@@ -218,8 +446,107 @@ export default function MapleStarForece() {
         <p>선택한 아이템의 데이터가 없습니다.</p>
       ) : (
         displayItems.map(group => (
+          
           <div key={group.itemName} className="starforce-list">
             <div className="starforce-card" style={{ marginTop: 20 }}>
+
+<div className="item-info-form">
+  <h3>아이템 기본 정보 입력</h3>
+        <h3>할인 및 파괴방지 선택</h3>
+
+      {/* MVP 할인 카테고리 */}
+      <div style={{ marginBottom: 15 }}>
+        <label htmlFor="mvpCategory" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
+          MVP 할인 카테고리
+        </label>
+        <select
+          id="mvpCategory"
+          value={mvpCategory}
+          onChange={e => setMvpCategory(e.target.value)}
+          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
+        >
+          <option value="" disabled>선택하세요</option>
+          {mvpOptions.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* PC방 할인 */}
+      <div style={{ marginBottom: 15 }}>
+        <label htmlFor="pcBangDiscount" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
+          PC방 할인
+        </label>
+        <select
+          id="pcBangDiscount"
+          value={pcBangDiscount}
+          onChange={e => setPcBangDiscount(e.target.value)}
+          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
+        >
+          <option value="" disabled>선택하세요</option>
+          {pcBangOptions.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 파괴방지 */}
+      <div style={{ marginBottom: 15 }}>
+        <label htmlFor="destroyPrevention" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
+          파괴방지
+        </label>
+        <select
+          id="destroyPrevention"
+          value={destroyPrevention}
+          onChange={e => setDestroyPrevention(e.target.value)}
+          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
+        >
+          <option value="" disabled>선택하세요</option>
+          {destroyPreventionOptions.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+  <div className="input-group">
+    <label htmlFor="itemLevel">아이템 레벨:</label>
+    <select
+      id="itemLevel"
+      value={itemLevel}
+      onChange={(e) => setItemLevel(e.target.value)}
+      className="styled-select"
+    >
+      <option value="" disabled>레벨 선택</option>
+      {[140, 150, 160, 200, 250].map(level => (
+        <option key={level} value={level}>{level}</option>
+      ))}
+    </select>
+  </div>
+  <div className="input-group">
+    <label htmlFor="noMakeValue">노작값:</label>
+    <div className="input-with-unit">
+      <input
+        id="noMakeValue"
+        type="number"
+        min="0"
+        value={noMakeValue}
+        onChange={e => setNoMakeValue(e.target.value.replace(/^0+/, ''))}
+        placeholder="노작값을 입력하세요"
+        className="styled-input"
+        autoComplete="off"
+        spellCheck="false"
+      />
+      <div className="mesocheck">{formatMoneyUnit(noMakeValue)}</div>
+    </div>
+  </div>
+  <button
+  className="save-button"
+  type="button"
+  disabled={isSaveDisabled}
+  onClick={() => handleSave(group.itemName)}
+>
+  저장
+</button>
+</div>
               <h2>{group.itemName} 강화 전이 통계</h2>
               <p>총 강화 시도: {group.totalAttempts}회 / 최대 강화 등급: {group.maxStar}성</p>
 
@@ -378,142 +705,11 @@ function TransitionTable({ transitions, eventStatus }) {
 
   
 
-    const [mvpCategory, setMvpCategory] = useState('');
-  const [pcBangDiscount, setPcBangDiscount] = useState('');
-  const [destroyPrevention, setDestroyPrevention] = useState('');
-
-  // 선택지 배열
-  const mvpOptions = ['없음', '실버', '골드'];
-  const pcBangOptions = ['있음', '없음'];
-  const destroyPreventionOptions = ['15', '16', '17', '없음'];
-
-
-  // 아이템 레벨과 노작값 상태 (한번만 받음)
-  const [itemLevel, setItemLevel] = useState('');
-  const [noMakeValue, setNoMakeValue] = useState('');
-    const [itemDetails, setItemDetails] = useState({});
-   // 저장 시 해당 아이템 키별 상태 전체 출력
-  const handleSave = (key) => {
-    const data = itemDetails[key];
-    alert(`저장된 구간: ${key}\n데이터: ${JSON.stringify(data, null, 2)}`);
-    console.log('저장 데이터:', key, data);
-  };
-
-  const formatMoneyUnit = (numStr) => {
-    if (!numStr) return '';
-
-    const num = parseInt(numStr, 10);
-    if (isNaN(num) || num <= 0) return '';
-
-    const units = [
-      '1원 메소', '10원 메소', '100원 메소', '1000원 메소',
-      '1만원 메소', '10만 메소', '100만 메소',
-      '천만 메소', '억 메소', '10억 메소', '100억 메소','1000억 메소',
-      '1조 메소', '10조 메소', '100조 메소',
-      '1경 메소', '10경 메소', '100경 메소', '해 메소'
-    ];
-
-    const length = numStr.length;
-    const index = Math.min(length - 1, units.length - 1);
-    return units[index];
-  };
 
 
 
   return (
     <div className="container">
-  <div className="item-info-form">
-  <h3>아이템 기본 정보 입력</h3>
-        <h3>할인 및 파괴방지 선택</h3>
-
-      {/* MVP 할인 카테고리 */}
-      <div style={{ marginBottom: 15 }}>
-        <label htmlFor="mvpCategory" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
-          MVP 할인 카테고리
-        </label>
-        <select
-          id="mvpCategory"
-          value={mvpCategory}
-          onChange={e => setMvpCategory(e.target.value)}
-          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
-        >
-          <option value="" disabled>선택하세요</option>
-          {mvpOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* PC방 할인 */}
-      <div style={{ marginBottom: 15 }}>
-        <label htmlFor="pcBangDiscount" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
-          PC방 할인
-        </label>
-        <select
-          id="pcBangDiscount"
-          value={pcBangDiscount}
-          onChange={e => setPcBangDiscount(e.target.value)}
-          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
-        >
-          <option value="" disabled>선택하세요</option>
-          {pcBangOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* 파괴방지 */}
-      <div style={{ marginBottom: 15 }}>
-        <label htmlFor="destroyPrevention" style={{ display: 'block', marginBottom: 6, fontWeight: '600' }}>
-          파괴방지
-        </label>
-        <select
-          id="destroyPrevention"
-          value={destroyPrevention}
-          onChange={e => setDestroyPrevention(e.target.value)}
-          style={{ width: '100%', padding: 8, fontSize: 16, borderRadius: 6, border: '1.5px solid #ccc' }}
-        >
-          <option value="" disabled>선택하세요</option>
-          {destroyPreventionOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-  <div className="input-group">
-    <label htmlFor="itemLevel">아이템 레벨:</label>
-    <select
-      id="itemLevel"
-      value={itemLevel}
-      onChange={(e) => setItemLevel(e.target.value)}
-      className="styled-select"
-    >
-      <option value="" disabled>레벨 선택</option>
-      {[140, 150, 160, 200, 250].map(level => (
-        <option key={level} value={level}>{level}</option>
-      ))}
-    </select>
-  </div>
-  <div className="input-group">
-    <label htmlFor="noMakeValue">노작값:</label>
-    <div className="input-with-unit">
-      <input
-        id="noMakeValue"
-        type="number"
-        min="0"
-        value={noMakeValue}
-        onChange={e => setNoMakeValue(e.target.value.replace(/^0+/, ''))}
-        placeholder="노작값을 입력하세요"
-        className="styled-input"
-        autoComplete="off"
-        spellCheck="false"
-      />
-      <div className="mesocheck">{formatMoneyUnit(noMakeValue)}</div>
-    </div>
-  </div>
-  <button onClick={handleSave} className="save-button" type="button">
-    저장
-  </button>
-</div>
       <div className="table-area">
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center", marginTop: 10 }} border="1">
           <thead>
