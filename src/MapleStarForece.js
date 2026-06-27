@@ -335,39 +335,105 @@ export default function MapleStarForece() {
     noDestroySuccessRate: "0.00008%"
   }
 };
-   // 저장 시 해당 아이템 키별 상태 전체 출력
 const handleSave = (itemName) => {
-  // 현재 displayItems 배열에서 클릭한 itemName에 해당하는 그룹 찾기
-  const group = displayItems.find(g => g.itemName === itemName);
+  const group = displayItems.find((g) => g.itemName === itemName);
   if (!group) {
     console.warn("해당 아이템 데이터를 찾을 수 없습니다:", itemName);
     return;
   }
 
   console.log("저장 버튼 눌린 아이템:", itemName);
+  console.log("파괴방지:", destroyPrevention);
+  console.log("아이템 레벨:", itemLevel);
   console.log("현재 선택 상태:");
   console.log("MVP 할인 카테고리:", mvpCategory);
   console.log("PC방 할인:", pcBangDiscount);
-  console.log("파괴방지:", destroyPrevention);
-  console.log("아이템 레벨:", itemLevel);
   console.log("노작값:", noMakeValue);
 
-  if (itemLevel === '160') {
-    console.log(`== 레벨 ${itemLevel} 구간별 시행 횟수와 베이스 비용 ==`);
-    Object.entries(level160Data).forEach(([range, data]) => {
-      console.log(`${range} :  베이스 비용 = ${data.baseCost}원`);
+  const destroyPreventionNum = Number(destroyPrevention);
+
+  // 수정된 파괴방지 구간 배열 생성 (17일 때 18→19 제외)
+  const weightedSections = (() => {
+    switch (destroyPreventionNum) {
+      case 15:
+        return [15,];
+      case 16:
+        return [15, 16,];
+      case 17:
+        return [15, 16, 16, 17,]; // 여기까지만 포함, 18→19 제외
+      default:
+        return [];
+    }
+  })();
+
+  if (itemLevel === "160") {
+    console.log(`== 레벨 ${itemLevel} 구간별 시도횟수 × 베이스 비용 (파괴방지 가중치 적용) ==`);
+
+    let totalWeightedCost = 0;
+
+    const formatKoreanUnit = (number) => {
+      if (number === 0) return "0원";
+      const units = [
+        { value: 1e12, str: "조" },
+        { value: 1e8, str: "억" },
+        { value: 1e4, str: "만" },
+        { value: 1e3, str: "천" },
+      ];
+      let result = "";
+      let remainder = number;
+      units.forEach(({ value, str }) => {
+        const count = Math.floor(remainder / value);
+        if (count > 0) {
+          result += `${count}${str} `;
+          remainder -= count * value;
+        }
+      });
+      if (remainder > 0) result += `${remainder.toLocaleString()}원`;
+      else result = result.trim() + "원";
+      return result.trim();
+    };
+
+    Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
+      Object.entries(toObj).forEach(([toStar, stat]) => {
+        const sectionKey = `${fromStar}→${toStar}`;
+        const baseCost = level160Data[sectionKey]?.baseCost;
+
+        if (baseCost === undefined) {
+          console.warn(`level160Data에 '${sectionKey}' 구간에 대한 데이터가 없습니다.`);
+          return;
+        }
+
+        const attempts = stat.attempts || 0;
+        const fromNum = parseInt(fromStar, 10);
+
+        const isWeighted = weightedSections.includes(fromNum);
+
+        const cost = isWeighted
+          ? baseCost * attempts * 3
+          : baseCost * attempts;
+
+        if (isWeighted) totalWeightedCost += cost;
+
+        console.log(
+          `${sectionKey} : 시도횟수 = ${attempts}회, 베이스 비용 = ${formatKoreanUnit(
+            baseCost
+          )}, 총 비용 = ${formatKoreanUnit(cost)}${isWeighted ? "  ※ 파괴방지 구간 가중치 적용" : ""}`
+        );
+      });
     });
+
+    if (weightedSections.length && totalWeightedCost > 0) {
+      console.log(`\n▶ 파괴방지 가중치 적용된 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
+    } else {
+      console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
+    }
   } else {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
 
-
-  const transitions = group.transitions;
-
-  // 각 강화 구간별 시도횟수 정리
+  // 기존 강화 구간별 시도횟수 출력
   const attemptsSummary = [];
-
-  Object.entries(transitions).forEach(([fromStar, toObj]) => {
+  Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
     Object.entries(toObj).forEach(([toStar, stat]) => {
       attemptsSummary.push({
         section: `${fromStar}성 → ${toStar}성`,
@@ -381,8 +447,6 @@ const handleSave = (itemName) => {
     console.log(`${section}: ${attempts}회`);
   });
 };
-
-
 
   const formatMoneyUnit = (numStr) => {
     if (!numStr) return '';
