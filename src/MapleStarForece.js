@@ -337,6 +337,8 @@ export default function MapleStarForece() {
 };
 const handleSave = (itemName) => {
   const group = displayItems.find((g) => g.itemName === itemName);
+    const eventStatus = itemEventStatuses[itemName] || "이벤트 없음";
+  console.log(`아이템 [${itemName}] 이벤트 상태: ${eventStatus}`);
   if (!group) {
     console.warn("해당 아이템 데이터를 찾을 수 없습니다:", itemName);
     return;
@@ -352,7 +354,6 @@ const handleSave = (itemName) => {
 
   const destroyPreventionNum = Number(destroyPrevention);
 
-  // 수정된 파괴방지 구간 배열 생성 (17일 때 18→19 제외)
   const weightedSections = (() => {
     switch (destroyPreventionNum) {
       case 15:
@@ -360,7 +361,7 @@ const handleSave = (itemName) => {
       case 16:
         return [15, 16,];
       case 17:
-        return [15, 16, 16, 17,]; // 여기까지만 포함, 18→19 제외
+        return [15, 16, 17,];
       default:
         return [];
     }
@@ -369,7 +370,8 @@ const handleSave = (itemName) => {
   if (itemLevel === "160") {
     console.log(`== 레벨 ${itemLevel} 구간별 시도횟수 × 베이스 비용 (파괴방지 가중치 적용) ==`);
 
-    let totalWeightedCost = 0;
+    let totalWeightedCost = 0; // 파괴방지 구간 비용 누적
+    let totalCost = 0;         // 모든 구간 비용 합산
 
     const formatKoreanUnit = (number) => {
       if (number === 0) return "0원";
@@ -408,10 +410,15 @@ const handleSave = (itemName) => {
 
         const isWeighted = weightedSections.includes(fromNum);
 
+        // 구간별 비용 계산 (가중치 적용 시 3배)
         const cost = isWeighted
           ? baseCost * attempts * 3
           : baseCost * attempts;
 
+        // 모든 구간 비용 누적
+        totalCost += cost;
+
+        // 가중치 구간 비용만 별도로 누적
         if (isWeighted) totalWeightedCost += cost;
 
         console.log(
@@ -422,11 +429,15 @@ const handleSave = (itemName) => {
       });
     });
 
+    // 파괴방지 가중치 적용된 비용 합계 출력
     if (weightedSections.length && totalWeightedCost > 0) {
-      console.log(`\n▶ 파괴방지 가중치 적용된 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
+      console.log(`\n▶ 파괴방지 구간 가중치 적용된 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
     } else {
       console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
     }
+
+    // 모든 구간 포함한 총합 비용 출력
+    console.log(`\n▶ 전체 강화 구간 총 비용 합계: ${formatKoreanUnit(totalCost)}`);
   } else {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }

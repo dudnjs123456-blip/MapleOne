@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser, clearUser } from './userSlice';
+import { setApiKey } from './apiKeySlice';
 import './Navbar.css';
 
 function Navbar() {
@@ -30,27 +31,34 @@ function Navbar() {
     navigate('/signup');
   };
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:8000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setLoginMessage('로그인 성공! 터미널에 서버 로그 확인하세요.');
-        dispatch(setUser({ username: data.username || username, token: data.token || null }));
-        closeLoginModal();
-      } else {
-        setLoginMessage(data.message || '로그인 실패');
-      }
-    } catch (error) {
-      setLoginMessage('서버 연결 실패');
-      console.error(error);
+const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch('http://localhost:8000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await response.json();
+
+    console.log('서버에서 받은 nxAPI 값:', data.nxAPI); // 여기에서 nxAPI 값 콘솔 출력
+
+    if (response.ok) {
+      setLoginMessage('로그인 성공! 터미널에 서버 로그 확인하세요.');
+      dispatch(setUser({ username: data.username || username, token: data.token || null }));
+       dispatch(setApiKey(data.nxAPI || null)); // 여기서 전역 상태에 apiKey 저장
+      
+      
+       closeLoginModal();
+    } else {
+      setLoginMessage(data.message || '로그인 실패');
     }
-  };
+  } catch (error) {
+    setLoginMessage('서버 연결 실패');
+    console.error(error);
+  }
+};
 
   // 로그아웃 핸들러
   const handleLogout = () => {
