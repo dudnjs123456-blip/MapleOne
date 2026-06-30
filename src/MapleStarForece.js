@@ -335,10 +335,18 @@ export default function MapleStarForece() {
     noDestroySuccessRate: "0.00008%"
   }
 };
-const handleSave = (itemName) => {
+
+
+
+
+
+
+
+
+
+
+const handleSave = (itemName, eventStatus) => {
   const group = displayItems.find((g) => g.itemName === itemName);
-    const eventStatus = itemEventStatuses[itemName] || "이벤트 없음";
-  console.log(`아이템 [${itemName}] 이벤트 상태: ${eventStatus}`);
   if (!group) {
     console.warn("해당 아이템 데이터를 찾을 수 없습니다:", itemName);
     return;
@@ -351,27 +359,45 @@ const handleSave = (itemName) => {
   console.log("MVP 할인 카테고리:", mvpCategory);
   console.log("PC방 할인:", pcBangDiscount);
   console.log("노작값:", noMakeValue);
+  console.log("현재 이벤트 상태:", eventStatus);
 
   const destroyPreventionNum = Number(destroyPrevention);
 
-  const weightedSections = (() => {
-    switch (destroyPreventionNum) {
-      case 15:
-        return [15,];
-      case 16:
-        return [15, 16,];
-      case 17:
-        return [15, 16, 17,];
-      default:
-        return [];
-    }
-  })();
+  // MVP 할인율 (브론즈: 3%, 골드: 5%, 다이아: 10%)
+  const mvpDiscountRates = {
+    브론즈: 0.03,
+    골드: 0.05,
+    다이아: 0.10,
+  };
+
+  // PC방 프리미엄 할인율 5%, 아니면 0
+  const pcBangDiscountRate = pcBangDiscount === "있음" ? 0.05 : 0;
+
+  const mvpDiscountRate = mvpDiscountRates[mvpCategory] || 0;
+
+  // 기본 할인율 합산 (MVP + PC방)
+  const totalDiscountRate = mvpDiscountRate + pcBangDiscountRate;
+
+  // 샤타포스 이벤트 할인율 30%
+  const eventDiscountRate = eventStatus === "샤타포스 진행중" ? 0.3 : 0;
+
+  // 파괴방지 가중치 구간 (15,16,17)
+  const destroyWeightedSections = [15, 16, 17];
+
+  // MVP+PC방 할인 구간 (15~17)
+  const discountSections = [15, 16, 17];
+
+  // 샤타포스 이벤트 할인 구간 (12~21)
+  const eventDiscountSections = [];
+  for (let i = 12; i <= 21; i++) {
+    eventDiscountSections.push(i);
+  }
 
   if (itemLevel === "160") {
-    console.log(`== 레벨 ${itemLevel} 구간별 시도횟수 × 베이스 비용 (파괴방지 가중치 적용) ==`);
+    console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (각 할인 및 파괴방지 가중치 반영) ==`);
 
-    let totalWeightedCost = 0; // 파괴방지 구간 비용 누적
-    let totalCost = 0;         // 모든 구간 비용 합산
+    let totalWeightedCost = 0;
+    let totalCost = 0;
 
     const formatKoreanUnit = (number) => {
       if (number === 0) return "0원";
@@ -390,8 +416,11 @@ const handleSave = (itemName) => {
           remainder -= count * value;
         }
       });
-      if (remainder > 0) result += `${remainder.toLocaleString()}원`;
-      else result = result.trim() + "원";
+      if (remainder > 0) {
+        result += `${remainder.toLocaleString()}원`;
+      } else {
+        result = result.trim() + "원";
+      }
       return result.trim();
     };
 
@@ -401,62 +430,65 @@ const handleSave = (itemName) => {
         const baseCost = level160Data[sectionKey]?.baseCost;
 
         if (baseCost === undefined) {
-          console.warn(`level160Data에 '${sectionKey}' 구간에 대한 데이터가 없습니다.`);
+          console.warn(`level160Data에 '${sectionKey}' 구간 데이터가 없습니다.`);
           return;
         }
 
         const attempts = stat.attempts || 0;
         const fromNum = parseInt(fromStar, 10);
 
-        const isWeighted = weightedSections.includes(fromNum);
+        // 기본 비용 = 베이스 비용 × 시도 횟수
+        const baseCostTotal = baseCost * attempts;
 
-        // 구간별 비용 계산 (가중치 적용 시 3배)
-        const cost = isWeighted
-          ? baseCost * attempts * 3
-          : baseCost * attempts;
+        // MVP+PC방 할인 적용 여부
+        const applyDiscount = discountSections.includes(fromNum) && totalDiscountRate > 0;
 
-        // 모든 구간 비용 누적
-        totalCost += cost;
+        // 샤타포스 이벤트 할인 적용 여부
+        const applyEventDiscount = eventDiscountSections.includes(fromNum) && eventDiscountRate > 0;
 
-        // 가중치 구간 비용만 별도로 누적
-        if (isWeighted) totalWeightedCost += cost;
+        // 1) 기본 할인 적용(MVP+PC방)
+        let costAfterDiscount = applyDiscount
+          ? baseCostTotal * (1 - totalDiscountRate)
+          : baseCostTotal;
+
+        // 2) 이벤트 할인 적용 (샤타포스)
+        if (applyEventDiscount) {
+          costAfterDiscount *= (1 - eventDiscountRate);
+        }
+
+        // 3) 파괴방지 3배 가중치 적용 여부
+        const isDestroyWeighted = destroyWeightedSections.includes(fromNum);
+
+        // 최종 비용 계산 (파괴방지 구간은 3배)
+        const finalCost = isDestroyWeighted ? costAfterDiscount * 3 : costAfterDiscount;
+
+        totalCost += finalCost;
+        if (isDestroyWeighted) totalWeightedCost += finalCost;
+
+        // 할인율 합산 계산 (단순 더함)
+        const combinedDiscountPercent = ((applyDiscount ? totalDiscountRate : 0) + (applyEventDiscount ? eventDiscountRate : 0)) * 100;
 
         console.log(
-          `${sectionKey} : 시도횟수 = ${attempts}회, 베이스 비용 = ${formatKoreanUnit(
-            baseCost
-          )}, 총 비용 = ${formatKoreanUnit(cost)}${isWeighted ? "  ※ 파괴방지 구간 가중치 적용" : ""}`
+          `${sectionKey} : 시도횟수 = ${attempts}회, ` +
+          `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
+          (applyDiscount || applyEventDiscount
+            ? `할인(${combinedDiscountPercent.toFixed(1)}%) 후 비용 = ${formatKoreanUnit(costAfterDiscount)}, `
+            : "") +
+          `최종 비용 = ${formatKoreanUnit(finalCost)}` +
+          (isDestroyWeighted ? " ※ 파괴방지 3배 가중치 적용" : "")
         );
       });
     });
 
-    // 파괴방지 가중치 적용된 비용 합계 출력
-    if (weightedSections.length && totalWeightedCost > 0) {
-      console.log(`\n▶ 파괴방지 구간 가중치 적용된 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
+    if (totalWeightedCost > 0) {
+      console.log(`\n▶ 파괴방지 구간 가중치 적용 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
     } else {
       console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
     }
-
-    // 모든 구간 포함한 총합 비용 출력
     console.log(`\n▶ 전체 강화 구간 총 비용 합계: ${formatKoreanUnit(totalCost)}`);
   } else {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
-
-  // 기존 강화 구간별 시도횟수 출력
-  const attemptsSummary = [];
-  Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
-    Object.entries(toObj).forEach(([toStar, stat]) => {
-      attemptsSummary.push({
-        section: `${fromStar}성 → ${toStar}성`,
-        attempts: stat.attempts || 0,
-      });
-    });
-  });
-
-  console.log(`=== [${itemName}] 강화 구간별 총 시도횟수 ===`);
-  attemptsSummary.forEach(({ section, attempts }) => {
-    console.log(`${section}: ${attempts}회`);
-  });
 };
 
   const formatMoneyUnit = (numStr) => {
