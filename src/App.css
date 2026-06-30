@@ -197,3 +197,22 @@
     max-width: 100%;
   }
 }
+
+/* CSS 파일 또는 스타일 태그 내 작성 */
+
+.responsive-img {
+  position: absolute;
+  opacity: 1;
+  z-index: 0;
+  pointer-events: none;
+  /* 기타 공통 스타일도 여기에 넣으세요 */
+}
+
+/* 위치별 개별 조정은 추가 클래스 또는 id로 따로라도 관리 가능 */
+
+/* 화면 너비 960px 이하일 때 이미지 숨기기 */
+@media screen and (max-width: 960px) {
+  .responsive-img {
+    display: none;
+  }
+}

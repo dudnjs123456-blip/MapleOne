@@ -6,12 +6,15 @@ import MapleStarForece from './MapleStarForece';
 import './App.css';
 
 
+
 function Mainpage() {
   const [searchTerm, setSearchTerm] = useState(''); // 검색어를 위한 상태
    
    const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const ws = useRef(null);
+
+  
 
   useEffect(() => {
   ws.current = new WebSocket('ws://localhost:5000'); // 5000 포트로 수정
@@ -37,6 +40,8 @@ function Mainpage() {
     return () => {};
   }, []);
 
+
+  
   const sendMessage = () => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN && input.trim() !== '') {
       ws.current.send(input.trim());
@@ -107,17 +112,18 @@ function Mainpage() {
         <img
         src="/메이린2.png"
         alt="예시 이미지"
+        className="responsive-img 메이린2"
         style={{
           position: 'absolute',
-          bottom: '350px',      // 화면 아래 10px
-          right: '1430px',       // 오른쪽 10px
-          width: '500px',      // 크기 작게
+          bottom: '450px',      // 화면 아래 10px
+          right: '1580px',       // 오른쪽 10px
+          width: '300px',      // 크기 작게
           opacity: 1,        // 약간 투명하게
           zIndex: 0,           // 다른 요소보다 뒤에 배치
           pointerEvents: 'none' // 클릭 방지 (필요에 따라)
         }}
       />
-      <img src="/메이린.gif" alt="애니메이션 gif" 
+      <img src="/메이린.gif" alt="애니메이션 gif"   className="responsive-img 메이린-gif"
               style={{
           position: 'absolute',
           bottom: '-350px',      // 화면 아래 10px
@@ -129,7 +135,7 @@ function Mainpage() {
         }}
       />
 
-        <img src="/레테.webp" alt="애니메이션 gif" 
+        <img src="/레테.webp" alt="애니메이션 gif"   className="responsive-img 레테"
               style={{
           position: 'absolute',
           bottom: '50px',      // 화면 아래 10px
