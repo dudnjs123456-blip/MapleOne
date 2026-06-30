@@ -354,7 +354,7 @@ const handleSave = (itemName, eventStatus) => {
 
   console.log("저장 버튼 눌린 아이템:", itemName);
   console.log("파괴방지:", destroyPrevention);
-  console.log("아이템 레벨:", itemLevel);
+  // console.log("아이템 레벨:", itemLevel);
   console.log("현재 선택 상태:");
   console.log("MVP 할인 카테고리:", mvpCategory);
   console.log("PC방 할인:", pcBangDiscount);
