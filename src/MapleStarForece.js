@@ -343,11 +343,10 @@ export default function MapleStarForece() {
 
 
 
+  const [costSummary, setCostSummary] = useState("");
 
-
-const handleSave = (itemName, eventStatus,records) => {
+const handleSave = (itemName, eventStatus, records) => {
   const group = displayItems.find((g) => g.itemName === itemName);
-  console.log(group)
   if (!group) {
     console.warn("해당 아이템 데이터를 찾을 수 없습니다:", itemName);
     return;
@@ -356,7 +355,6 @@ const handleSave = (itemName, eventStatus,records) => {
   console.log("저장 버튼 눌린 아이템:", itemName);
   console.log("파괴방지:", destroyPrevention);
   console.log("아이템 레벨:", itemLevel);
-  console.log("현재 선택 상태:");
   console.log("MVP 할인 카테고리:", mvpCategory);
   console.log("PC방 할인:", pcBangDiscount);
   console.log("노작값:", noMakeValue);
@@ -364,23 +362,16 @@ const handleSave = (itemName, eventStatus,records) => {
 
   const destroyPreventionNum = Number(destroyPrevention);
 
-  // MVP 할인율 설정
   const mvpDiscountRates = {
     브론즈: 0.03,
     골드: 0.05,
     다이아: 0.10,
   };
 
-  // PC방 프리미엄 할인율 5%, 아니면 0
   const pcBangDiscountRate = pcBangDiscount === "있음" ? 0.05 : 0;
-
-  // 현재 MVP 할인율, 없으면 0
   const mvpDiscountRate = mvpDiscountRates[mvpCategory] || 0;
-
-  // MVP + PC방 할인 총합
   const totalDiscountRate = mvpDiscountRate + pcBangDiscountRate;
 
-  // 파괴방지 3배 가중치 적용 구간 (15,16,17)
   const weightedSections = (() => {
     switch (destroyPreventionNum) {
       case 15:
@@ -394,22 +385,16 @@ const handleSave = (itemName, eventStatus,records) => {
     }
   })();
 
-  // MVP와 PC방 할인 적용 구간 (15~17)
   const discountSections = [15, 16, 17];
-
-  // 샤타포스 이벤트 30% 할인 적용 구간 (12~21)
-  const eventDiscountSections = Array.from({ length: 10 }, (_, i) => i + 12); // [12,13,...,21]
-
-  // 이벤트 진행중이면 30% 할인, 아니면 없음
-  const eventDiscountRate = eventStatus === "샤타포스 진행중" ? 0.3 : 0;
+  const eventDiscountSections = Array.from({ length: 10 }, (_, i) => i + 12); // 12~21
 
   if (itemLevel === "160") {
-    console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (할인, 파괴방지, 이벤트 적용) ==`);
+    console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (할인, 파괴방지 포함) ==`);
 
     let totalWeightedCost = 0;
-    let totalCost = 0;
+    let totalCostBeforeEventDiscount = 0;
+    let totalDestroyAttempts = 0; // 특정 구간 파괴 횟수 누적용 변수
 
-    // 한글 단위 변환 함수
     const formatKoreanUnit = (number) => {
       if (number === 0) return "0원";
       const units = [
@@ -435,8 +420,18 @@ const handleSave = (itemName, eventStatus,records) => {
       return result.trim();
     };
 
+    console.log("\n구간별 파괴 횟수 합산 시작:");
+
     Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
+      const fromNum = parseInt(fromStar, 10);
+
+      let sectionDestroyAttempts = 0; // 이 구간 파괴 횟수 합산
+
       Object.entries(toObj).forEach(([toStar, stat]) => {
+        const attempts = stat.attempts || 0;
+        sectionDestroyAttempts += attempts;
+
+        // 기존 강화 비용 계산 (기존대로 유지)
         const sectionKey = `${fromStar}→${toStar}`;
         const baseCost = level160Data[sectionKey]?.baseCost;
         if (baseCost === undefined) {
@@ -444,64 +439,63 @@ const handleSave = (itemName, eventStatus,records) => {
           return;
         }
 
-        const attempts = stat.attempts || 0;
-        const fromNum = parseInt(fromStar, 10);
-
         const baseCostTotal = baseCost * attempts;
-
-        // MVP+PC방 할인 적용 조건
         const applyDiscount = discountSections.includes(fromNum) && totalDiscountRate > 0;
-
-        // 샤타포스 이벤트 할인 적용 조건
-        const applyEventDiscount = eventDiscountSections.includes(fromNum) && eventDiscountRate > 0;
-
-        // 1) 기본 할인 적용 (MVP+PC방)
-        let costAfterDiscount = applyDiscount
+        const discountedCost = applyDiscount
           ? baseCostTotal * (1 - totalDiscountRate)
           : baseCostTotal;
-
-        // 2) 이벤트 할인 추가 적용 (샤타포스 30%)
-        if (applyEventDiscount) {
-          costAfterDiscount *= (1 - eventDiscountRate);
-        }
-
-        // 3) 파괴방지 가중치 적용 여부
         const isDestroyWeighted = weightedSections.includes(fromNum);
+        const finalCostBeforeEvent = isDestroyWeighted ? discountedCost * 3 : discountedCost;
 
-        // 최종 비용 (파괴방지 구간은 3배)
-        const finalCost = isDestroyWeighted ? costAfterDiscount * 3 : costAfterDiscount;
+        totalCostBeforeEventDiscount += finalCostBeforeEvent;
 
-        totalCost += finalCost;
-        if (isDestroyWeighted) totalWeightedCost += finalCost;
+        if (isDestroyWeighted) totalWeightedCost += finalCostBeforeEvent;
 
-        const combinedDiscountPercent = (
-          (applyDiscount ? totalDiscountRate : 0) +
-          (applyEventDiscount ? eventDiscountRate : 0)
-        ) * 100;
+        const combinedDiscountPercent = (applyDiscount ? totalDiscountRate * 100 : 0).toFixed(1);
 
         console.log(
           `${sectionKey} : 시도횟수 = ${attempts}회, ` +
             `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
-            (applyDiscount || applyEventDiscount
-              ? `할인(${combinedDiscountPercent.toFixed(1)}%) 후 비용 = ${formatKoreanUnit(costAfterDiscount)}, `
-              : "") +
-            `최종 비용 = ${formatKoreanUnit(finalCost)}` +
-            (isDestroyWeighted ? " ※ 파괴방지 3배 가중치 적용" : "")
+            (applyDiscount ? `할인(${combinedDiscountPercent}%) 후 비용 = ${formatKoreanUnit(discountedCost)}, ` : "") +
+            `파괴방지 적용 전 비용 = ${formatKoreanUnit(finalCostBeforeEvent)}`
         );
       });
+
+      // 각 구간별 파괴 횟수 출력 및 전체 누적에 더하기
+      console.log(`👉 구간 ${fromNum} 파괴 횟수 합계: ${sectionDestroyAttempts}회`);
+      totalDestroyAttempts += sectionDestroyAttempts;
     });
 
+    console.log(`\n▶ 전체 파괴 횟수 합계: ${totalDestroyAttempts}회`);
+
+    const applyEventDiscount = itemEventStatuses[group.itemName] === "샤타포스 진행중";
+    const totalCostFinal = applyEventDiscount
+      ? totalCostBeforeEventDiscount * 0.7
+      : totalCostBeforeEventDiscount;
+
+    console.log(`\n▶ 전체 강화 구간 할인 및 가중치 적용 전 총 비용: ${formatKoreanUnit(totalCostBeforeEventDiscount)}`);
+
+    if (applyEventDiscount) {
+      console.log(`▶ 샤타포스 이벤트 30% 할인 적용 후 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
+    } else {
+      console.log(`▶ 이벤트 할인 미적용, 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
+    }
+
     if (totalWeightedCost > 0) {
-      console.log(`\n▶ 파괴방지 구간 가중치 적용 총 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
+      console.log(`\n▶ 파괴방지 3배 가중치 적용 구간 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
     } else {
       console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
     }
-    console.log(`\n▶ 전체 강화 구간 총 비용 합계: ${formatKoreanUnit(totalCost)}`);
+
+    // 노작값 × 총 파괴 횟수 계산 및 출력
+    const noMakeValueNum = Number(noMakeValue) || 0;
+    const totalDestroyCost = noMakeValueNum * totalDestroyAttempts;
+    console.log(`\n▶ 노작값(${noMakeValueNum}) × 총 파괴 횟수(${totalDestroyAttempts}) = ${totalDestroyCost}`);
+    console.log(`▶ 노작값 기반 파괴비용 (한국어 단위) : ${formatKoreanUnit(totalDestroyCost)}`);
   } else {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
 };
-
   const formatMoneyUnit = (numStr) => {
     if (!numStr) return '';
 
@@ -662,8 +656,11 @@ const isSaveDisabled = !(
   disabled={isSaveDisabled}
   onClick={() => handleSave(group.itemName)}
 >
-  저장
+  확인하기
 </button>
+   <div style={{ whiteSpace: "pre-wrap", marginTop: "1rem" }}>
+        {costSummary}
+      </div>
 </div>
               <h2>{group.itemName} 강화 전이 통계</h2>
               <p>총 강화 시도: {group.totalAttempts}회 / 최대 강화 등급: {group.maxStar}성</p>
