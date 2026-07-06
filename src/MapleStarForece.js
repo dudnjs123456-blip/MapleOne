@@ -26,6 +26,8 @@ function getItemEventStatus(records) {
   // 3가지 모두 해당되지 않으면 여기서 반환
   return "이벤트 없음";
 }
+
+
 // 강화 전이 그룹핑 및 확률 계산 (기존 로직 유지)
 function groupByItemAndTransitionFailMerged(data) {
   const groupedItems = {};
@@ -343,7 +345,7 @@ export default function MapleStarForece() {
 
 
 
-  const [costSummary, setCostSummary] = useState("");
+const [costSummary, setCostSummary] = useState("");
 
 const handleSave = (itemName, eventStatus, records) => {
   const group = displayItems.find((g) => g.itemName === itemName);
@@ -355,11 +357,11 @@ const handleSave = (itemName, eventStatus, records) => {
   console.log("저장 버튼 눌린 아이템:", itemName);
   console.log("파괴방지:", destroyPrevention);
   console.log("아이템 레벨:", itemLevel);
+  console.log("현재 선택 상태:");
   console.log("MVP 할인 카테고리:", mvpCategory);
   console.log("PC방 할인:", pcBangDiscount);
   console.log("노작값:", noMakeValue);
   console.log("현재 이벤트 상태:", itemEventStatuses[group.itemName]);
-
   const destroyPreventionNum = Number(destroyPrevention);
 
   const mvpDiscountRates = {
@@ -369,7 +371,9 @@ const handleSave = (itemName, eventStatus, records) => {
   };
 
   const pcBangDiscountRate = pcBangDiscount === "있음" ? 0.05 : 0;
+
   const mvpDiscountRate = mvpDiscountRates[mvpCategory] || 0;
+
   const totalDiscountRate = mvpDiscountRate + pcBangDiscountRate;
 
   const weightedSections = (() => {
@@ -393,7 +397,6 @@ const handleSave = (itemName, eventStatus, records) => {
 
     let totalWeightedCost = 0;
     let totalCostBeforeEventDiscount = 0;
-    let totalDestroyAttempts = 0; // 특정 구간 파괴 횟수 누적용 변수
 
     const formatKoreanUnit = (number) => {
       if (number === 0) return "0원";
@@ -420,18 +423,8 @@ const handleSave = (itemName, eventStatus, records) => {
       return result.trim();
     };
 
-    console.log("\n구간별 파괴 횟수 합산 시작:");
-
     Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
-      const fromNum = parseInt(fromStar, 10);
-
-      let sectionDestroyAttempts = 0; // 이 구간 파괴 횟수 합산
-
       Object.entries(toObj).forEach(([toStar, stat]) => {
-        const attempts = stat.attempts || 0;
-        sectionDestroyAttempts += attempts;
-
-        // 기존 강화 비용 계산 (기존대로 유지)
         const sectionKey = `${fromStar}→${toStar}`;
         const baseCost = level160Data[sectionKey]?.baseCost;
         if (baseCost === undefined) {
@@ -439,12 +432,18 @@ const handleSave = (itemName, eventStatus, records) => {
           return;
         }
 
+        const attempts = stat.attempts || 0;
+        const fromNum = parseInt(fromStar, 10);
         const baseCostTotal = baseCost * attempts;
+
         const applyDiscount = discountSections.includes(fromNum) && totalDiscountRate > 0;
+
         const discountedCost = applyDiscount
           ? baseCostTotal * (1 - totalDiscountRate)
           : baseCostTotal;
+
         const isDestroyWeighted = weightedSections.includes(fromNum);
+
         const finalCostBeforeEvent = isDestroyWeighted ? discountedCost * 3 : discountedCost;
 
         totalCostBeforeEventDiscount += finalCostBeforeEvent;
@@ -453,22 +452,21 @@ const handleSave = (itemName, eventStatus, records) => {
 
         const combinedDiscountPercent = (applyDiscount ? totalDiscountRate * 100 : 0).toFixed(1);
 
+        // 각 구간 파괴 횟수 출력
+        const destroyCount = stat.destroy || 0;
+        console.log(`${sectionKey} 구간의 파괴 횟수: ${destroyCount}회`);
+
         console.log(
           `${sectionKey} : 시도횟수 = ${attempts}회, ` +
-            `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
-            (applyDiscount ? `할인(${combinedDiscountPercent}%) 후 비용 = ${formatKoreanUnit(discountedCost)}, ` : "") +
-            `파괴방지 적용 전 비용 = ${formatKoreanUnit(finalCostBeforeEvent)}`
+          `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
+          (applyDiscount ? `할인(${combinedDiscountPercent}%) 후 비용 = ${formatKoreanUnit(discountedCost)}, ` : "") +
+          `파괴방지 적용 전 비용 = ${formatKoreanUnit(finalCostBeforeEvent)}`
         );
       });
-
-      // 각 구간별 파괴 횟수 출력 및 전체 누적에 더하기
-      console.log(`👉 구간 ${fromNum} 파괴 횟수 합계: ${sectionDestroyAttempts}회`);
-      totalDestroyAttempts += sectionDestroyAttempts;
     });
 
-    console.log(`\n▶ 전체 파괴 횟수 합계: ${totalDestroyAttempts}회`);
-
     const applyEventDiscount = itemEventStatuses[group.itemName] === "샤타포스 진행중";
+
     const totalCostFinal = applyEventDiscount
       ? totalCostBeforeEventDiscount * 0.7
       : totalCostBeforeEventDiscount;
@@ -476,8 +474,10 @@ const handleSave = (itemName, eventStatus, records) => {
     console.log(`\n▶ 전체 강화 구간 할인 및 가중치 적용 전 총 비용: ${formatKoreanUnit(totalCostBeforeEventDiscount)}`);
 
     if (applyEventDiscount) {
+      setCostSummary(formatKoreanUnit(totalCostFinal));
       console.log(`▶ 샤타포스 이벤트 30% 할인 적용 후 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
     } else {
+      setCostSummary(formatKoreanUnit(totalCostFinal));
       console.log(`▶ 이벤트 할인 미적용, 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
     }
 
@@ -486,16 +486,11 @@ const handleSave = (itemName, eventStatus, records) => {
     } else {
       console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
     }
-
-    // 노작값 × 총 파괴 횟수 계산 및 출력
-    const noMakeValueNum = Number(noMakeValue) || 0;
-    const totalDestroyCost = noMakeValueNum * totalDestroyAttempts;
-    console.log(`\n▶ 노작값(${noMakeValueNum}) × 총 파괴 횟수(${totalDestroyAttempts}) = ${totalDestroyCost}`);
-    console.log(`▶ 노작값 기반 파괴비용 (한국어 단위) : ${formatKoreanUnit(totalDestroyCost)}`);
   } else {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
 };
+
   const formatMoneyUnit = (numStr) => {
     if (!numStr) return '';
 
@@ -774,48 +769,71 @@ function TransitionTable({ transitions, eventStatus }) {
 
   const myNoDestroyRates = calculateMyNoDestroySuccessRate(transitions);
 
-  // 성공/실패/파괴 비율 비교용 렌더 함수 (성공률: 플러스 빨강, 마이너스 파랑)
-  const renderRateWithComparison = (currentStr, avgStr) => {
-    if (!currentStr || !avgStr || currentStr === "-" || avgStr === "-") {
-      return <span style={{ color: 'white' }}>{currentStr ?? "-"}</span>;
-    }
-    const currentVal = parsePercent(currentStr);
-    const avgVal = parsePercent(avgStr);
-    if (currentVal === null || avgVal === null) return <span style={{ color: 'white' }}>{currentStr}</span>;
-    const diff = currentVal - avgVal;
-    const color = diff > 0 ? "rgba(241, 112, 122, 0.7)" : diff < 0 ? "rgba(135, 206, 250, 0.7)" : "white";
-    const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "";
-    return (
-      <span style={{ color, fontWeight: "bold", whiteSpace: "nowrap" }}>
-        {currentVal.toFixed(2)}% <br />
-        <small style={{ fontWeight: "normal" }}>{arrow} {diff === 0 ? "차이 없음" : Math.abs(diff).toFixed(2) + "%"}</small>
-      </span>
-    );
-  };
+const renderRateWithComparison = (currentStr, avgStr) => {
+  if (!currentStr || !avgStr || currentStr === "-" || avgStr === "-") {
+    return <span style={{ color: 'white' }}>{currentStr ?? "-"}</span>;
+  }
+  const currentVal = parsePercent(currentStr);
+  const avgVal = parsePercent(avgStr);
+  if (currentVal === null || avgVal === null) return <span style={{ color: 'white' }}>{currentStr}</span>;
+  const diff = currentVal - avgVal;
+
+  // span 태그 색상 구간 (기본 흰색 유지)
+  let spanColor = "white";
+  if (diff >= 10) spanColor = "rgba(0, 128, 0, 0.8)";       // 예: 10 이상은 짙은 초록
+  else if (diff > 0) spanColor = "rgba(50, 205, 50, 0.8)";  // 0 초과 10 미만은 연초록
+  else if (diff <= -10) spanColor = "rgba(0, 0, 139, 0.8)"; // -10 이하 짙은 파랑
+  else if (diff < 0) spanColor = "rgba(70, 130, 180, 0.8)"; // 0 미만 -10 초과 연파랑
+
+  // small 태그 기존 색상 (빨강/파랑/흰)
+  const smallColor = diff > 0 ? "rgba(255, 0, 21, 0.7)" : diff < 0 ? "rgb(25, 38, 56)" : "white";
+  const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "";
+
+  return (
+    <span style={{ color: spanColor, fontWeight: "bold", whiteSpace: "nowrap" }}>
+      {currentVal.toFixed(2)}% <br />
+      <small style={{ color: smallColor, fontWeight: "normal" }}>
+        {arrow} {diff === 0 ? "차이 없음" : Math.abs(diff).toFixed(2) + "%"}
+      </small>
+    </span>
+  );
+};
 
   // 나만의 파없성 확률 비교용 렌더 함수 (평균과 비교, 색상·화살표 포함)
-  const renderMyNoDestroyRateCell = (myStr, avgStr) => {
-    if (!myStr || !avgStr || myStr === "-" || avgStr === "-") {
-      return <span style={{ color: 'white' }}>{myStr ?? "-"}</span>;
-    }
-    const myVal = parsePercent(myStr);
-    const avgVal = parsePercent(avgStr);
-    if (myVal === null || avgVal === null) return <span style={{ color: 'white' }}>{myStr}</span>;
-    const diff = myVal - avgVal;
-    let color = "white";
-    let arrow = "";
-    if (diff > 5) color = "rgba(241, 112, 122, 0.7)";
-    else if (diff > 0) color = "rgba(255, 182, 193, 0.7)";
-    else if (diff < 0) color = "rgba(135, 206, 250, 0.7)";
-    if (diff > 0) arrow = "▲";
-    else if (diff < 0) arrow = "▼";
-    return (
-      <span style={{ color, fontWeight: "bold", whiteSpace: "nowrap" }}>
-        {myVal.toFixed(2)}% <br />
-        <small style={{ fontWeight: "normal" }}>{arrow} {diff === 0 ? "차이 없음" : Math.abs(diff).toFixed(2) + "%"}</small>
-      </span>
-    );
-  };
+ const renderMyNoDestroyRateCell = (myStr, avgStr) => {
+  if (!myStr || !avgStr || myStr === "-" || avgStr === "-") {
+    return <span style={{ color: 'white' }}>{myStr ?? "-"}</span>;
+  }
+  const myVal = parsePercent(myStr);
+  const avgVal = parsePercent(avgStr);
+  if (myVal === null || avgVal === null) return <span style={{ color: 'white' }}>{myStr}</span>;
+  const diff = myVal - avgVal;
+
+  // span 색상 구간 설정 (기본 white)
+  let spanColor = "white";
+  if (diff > 10) spanColor = "rgba(0, 255, 0, 0.8)"; // 예: 10 이상일 때 초록색 계열
+  else if (diff > 0) spanColor = "rgba(255, 215, 0, 0.8)"; // 예: 0 초과 10 이하일 때 금색 계열
+  else if (diff < -5) spanColor = "rgba(255, 69, 0, 0.8)"; // 예: -5 이하일 때 진한 빨강
+  // 위 구간은 예시이니 원하시는대로 조절 가능
+
+  // small 기존 컬러 조건
+  let smallColor = "white";
+  let arrow = "";
+  if (diff > 5) smallColor = "rgba(255, 7, 27, 0.7)";
+  else if (diff > 0) smallColor = "rgba(255, 182, 193, 0.7)";
+  else if (diff < 0) smallColor = "rgba(135, 206, 250, 0.7)";
+  if (diff > 0) arrow = "▲";
+  else if (diff < 0) arrow = "▼";
+
+  return (
+    <span style={{ color: spanColor, fontWeight: "bold", whiteSpace: "nowrap" }}>
+      {myVal.toFixed(2)}% <br />
+      <small style={{ color: smallColor, fontWeight: "normal" }}>
+        {arrow} {diff === 0 ? "차이 없음" : Math.abs(diff).toFixed(2) + "%"}
+      </small>
+    </span>
+  );
+};
 
 
   
