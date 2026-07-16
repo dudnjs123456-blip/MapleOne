@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo,useEffect } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import "./MapleStarForece.css";
@@ -27,8 +27,6 @@ function getItemEventStatus(records) {
   return "이벤트 없음";
 }
 
-
-// 강화 전이 그룹핑 및 확률 계산 (기존 로직 유지)
 function groupByItemAndTransitionFailMerged(data) {
   const groupedItems = {};
   const globalMaxStar = data.reduce(
@@ -77,6 +75,7 @@ function groupByItemAndTransitionFailMerged(data) {
     else if (item.item_upgrade_result.includes("실패") || fromStar === actualToStar) stat.failure++;
   });
 
+  // 성공/실패/파괴 확률 계산
   Object.values(groupedItems).forEach((group) => {
     Object.values(group.transitions).forEach((toObj) => {
       Object.values(toObj).forEach((stat) => {
@@ -91,8 +90,12 @@ function groupByItemAndTransitionFailMerged(data) {
     });
   });
 
+
   return groupedItems;
 }
+
+
+
 
 // 전체 아이템 강화 전이 통계 누적 계산
 function computeOverallTransitions(groupedItems) {
@@ -111,6 +114,9 @@ function computeOverallTransitions(groupedItems) {
     });
   });
 
+
+  
+
   Object.values(overall).forEach(toObj => {
     Object.values(toObj).forEach(stat => {
       if (stat.attempts > 0) {
@@ -126,12 +132,62 @@ function computeOverallTransitions(groupedItems) {
   return overall;
 }
 
-export default function MapleStarForece() {
+
+
+
+
+export default function MapleStarForece(data) {
   const apiKey = useSelector(state => state.apiKey);
   const [selectedDate, setSelectedDate] = useState("");
   const [starforceData, setStarforceData] = useState(null);
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState("전체보기");
+  const groupedItems = useMemo(() => {
+    if(!starforceData?.starforce_history) return {};
+    return groupByItemAndTransitionFailMerged(starforceData.starforce_history);
+  }, [starforceData]);
+        // 강화 구간 및 모든 단계를 상세 출력하는 내부 함수
+  function getEnhanceRangeDetails(group) {
+    const fromStars = Object.keys(group.transitions).map(Number);
+    if (fromStars.length === 0) return { min: 0, max: 0, allSteps: [] };
+
+    const minFromStar = Math.min(...fromStars);
+    let allToStars = [];
+    fromStars.forEach(fromStar => {
+      const toStars = Object.keys(group.transitions[fromStar]).map(Number);
+      allToStars = allToStars.concat(toStars);
+    });
+    const maxToStar = Math.max(...allToStars);
+
+    // min 부터 max 까지 모든 구간 배열 생성
+    const allSteps = [];
+    for (let i = minFromStar; i <= maxToStar; i++) {
+      allSteps.push(i);
+    }
+
+    return { min: minFromStar, max: maxToStar, allSteps };
+  }
+useEffect(() => {
+  console.log('groupedItems:', groupedItems);
+
+
+  if (!groupedItems || Object.keys(groupedItems).length === 0) {
+    console.log('groupedItems가 비어있거나 데이터가 준비되지 않았습니다.');
+    return;
+  }
+
+  Object.values(groupedItems).forEach(group => {
+    const { min, max, allSteps } = getEnhanceRangeDetails(group);
+    if (allSteps.length > 0) {
+      const stepString = allSteps.join(' ');
+      console.log(`${group.itemName} 강화 구간: 시작 = ${min}, 끝 = ${max}`);
+      console.log(`존재하는 강화 단계: ${stepString}가 있습니다.`);
+    } else {
+      console.log(`${group.itemName} 강화 구간 정보가 없습니다.`);
+    }
+  });
+}, [groupedItems]);
+
 
   const onDateChange = async e => {
     const date = e.target.value;
@@ -159,10 +215,7 @@ export default function MapleStarForece() {
     }
   };
 
-  const groupedItems = useMemo(() => {
-    if(!starforceData?.starforce_history) return {};
-    return groupByItemAndTransitionFailMerged(starforceData.starforce_history);
-  }, [starforceData]);
+
 
   const overallStats = useMemo(() => {
     if(!groupedItems) return {};
@@ -341,12 +394,8 @@ export default function MapleStarForece() {
 
 
 
-
-
-
-
 const [costSummary, setCostSummary] = useState("");
-
+const [selectedItemName, setSelectedItemName] = useState(null);
 const handleSave = (itemName, eventStatus, records) => {
   const group = displayItems.find((g) => g.itemName === itemName);
   if (!group) {
@@ -354,6 +403,7 @@ const handleSave = (itemName, eventStatus, records) => {
     return;
   }
 
+    setSelectedItemName(itemName);
   console.log("저장 버튼 눌린 아이템:", itemName);
   console.log("파괴방지:", destroyPrevention);
   console.log("아이템 레벨:", itemLevel);
@@ -362,6 +412,7 @@ const handleSave = (itemName, eventStatus, records) => {
   console.log("PC방 할인:", pcBangDiscount);
   console.log("노작값:", noMakeValue);
   console.log("현재 이벤트 상태:", itemEventStatuses[group.itemName]);
+
   const destroyPreventionNum = Number(destroyPrevention);
 
   const mvpDiscountRates = {
@@ -371,9 +422,7 @@ const handleSave = (itemName, eventStatus, records) => {
   };
 
   const pcBangDiscountRate = pcBangDiscount === "있음" ? 0.05 : 0;
-
   const mvpDiscountRate = mvpDiscountRates[mvpCategory] || 0;
-
   const totalDiscountRate = mvpDiscountRate + pcBangDiscountRate;
 
   const weightedSections = (() => {
@@ -390,13 +439,13 @@ const handleSave = (itemName, eventStatus, records) => {
   })();
 
   const discountSections = [15, 16, 17];
-  const eventDiscountSections = Array.from({ length: 10 }, (_, i) => i + 12); // 12~21
 
   if (itemLevel === "160") {
     console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (할인, 파괴방지 포함) ==`);
 
     let totalWeightedCost = 0;
     let totalCostBeforeEventDiscount = 0;
+    let totalDestroyCount = 0;  // 파괴 횟수 누적 변수
 
     const formatKoreanUnit = (number) => {
       if (number === 0) return "0원";
@@ -437,25 +486,24 @@ const handleSave = (itemName, eventStatus, records) => {
         const baseCostTotal = baseCost * attempts;
 
         const applyDiscount = discountSections.includes(fromNum) && totalDiscountRate > 0;
-
         const discountedCost = applyDiscount
           ? baseCostTotal * (1 - totalDiscountRate)
           : baseCostTotal;
 
         const isDestroyWeighted = weightedSections.includes(fromNum);
-
         const finalCostBeforeEvent = isDestroyWeighted ? discountedCost * 3 : discountedCost;
 
         totalCostBeforeEventDiscount += finalCostBeforeEvent;
-
         if (isDestroyWeighted) totalWeightedCost += finalCostBeforeEvent;
+
+        // 파괴 횟수 누적
+        const destroyCount = stat.destroy || 0;
+        totalDestroyCount += destroyCount;
 
         const combinedDiscountPercent = (applyDiscount ? totalDiscountRate * 100 : 0).toFixed(1);
 
-        // 각 구간 파괴 횟수 출력
-        const destroyCount = stat.destroy || 0;
+        // 구간별 상세 출력
         console.log(`${sectionKey} 구간의 파괴 횟수: ${destroyCount}회`);
-
         console.log(
           `${sectionKey} : 시도횟수 = ${attempts}회, ` +
           `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
@@ -466,20 +514,24 @@ const handleSave = (itemName, eventStatus, records) => {
     });
 
     const applyEventDiscount = itemEventStatuses[group.itemName] === "샤타포스 진행중";
-
-    const totalCostFinal = applyEventDiscount
+    let totalCostFinal = applyEventDiscount
       ? totalCostBeforeEventDiscount * 0.7
       : totalCostBeforeEventDiscount;
 
-    console.log(`\n▶ 전체 강화 구간 할인 및 가중치 적용 전 총 비용: ${formatKoreanUnit(totalCostBeforeEventDiscount)}`);
+    // 노작값 숫자 변환
+    const noMakeNum = Number(noMakeValue) || 0;
+    // 파괴 횟수 곱하기 노작값 (추가 비용)
+    const destroyExtraCost = totalDestroyCount * noMakeNum;
+    // 최종 비용에 파괴 추가 비용 포함
+    totalCostFinal += destroyExtraCost;
 
-    if (applyEventDiscount) {
-      setCostSummary(formatKoreanUnit(totalCostFinal));
-      console.log(`▶ 샤타포스 이벤트 30% 할인 적용 후 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
-    } else {
-      setCostSummary(formatKoreanUnit(totalCostFinal));
-      console.log(`▶ 이벤트 할인 미적용, 최종 비용: ${formatKoreanUnit(totalCostFinal)}`);
-    }
+    console.log(`\n▶ 파괴 횟수 총합: ${totalDestroyCount}회`);
+    console.log(`▶ 노작값: ${noMakeNum}`);
+    console.log(`▶ 파괴 횟수에 노작값 곱한 추가 비용: ${formatKoreanUnit(destroyExtraCost)}`);
+
+    console.log(`\n▶ 전체 강화 비용 (할인 및 가중치 적용 + 파괴 비용 포함): ${formatKoreanUnit(totalCostFinal)}`);
+
+    setCostSummary(formatKoreanUnit(totalCostFinal));
 
     if (totalWeightedCost > 0) {
       console.log(`\n▶ 파괴방지 3배 가중치 적용 구간 비용 합계: ${formatKoreanUnit(totalWeightedCost)}`);
@@ -490,7 +542,6 @@ const handleSave = (itemName, eventStatus, records) => {
     console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
 };
-
   const formatMoneyUnit = (numStr) => {
     if (!numStr) return '';
 
@@ -628,6 +679,9 @@ const isSaveDisabled = !(
       ))}
     </select>
   </div>
+  
+
+
   <div className="input-group">
     <label htmlFor="noMakeValue">노작값:</label>
     <div className="input-with-unit">
@@ -645,6 +699,38 @@ const isSaveDisabled = !(
       <div className="mesocheck">{formatMoneyUnit(noMakeValue)}</div>
     </div>
   </div>
+
+
+<select>
+  {group && (() => {
+    const fromStars = Object.keys(group.transitions).map(Number);
+    if (fromStars.length === 0) return null;
+
+    const minFromStar = Math.min(...fromStars);
+    let allToStars = [];
+    fromStars.forEach(fromStar => {
+      const toStars = Object.keys(group.transitions[fromStar]).map(Number);
+      allToStars = allToStars.concat(toStars);
+    });
+    const maxToStar = Math.max(...allToStars);
+
+    const allSteps = [];
+    for (let i = minFromStar; i <= maxToStar; i++) {
+      allSteps.push(i);
+    }
+
+    return (
+      <optgroup key={group.itemName} label={`${group.itemName} 강화 구간`}>
+        {allSteps.map(step => (
+          <option key={step} value={step}>
+            {step} 단계
+          </option>
+        ))}
+      </optgroup>
+    );
+  })()}
+</select>
+
   <button
   className="save-button"
   type="button"
@@ -653,9 +739,11 @@ const isSaveDisabled = !(
 >
   확인하기
 </button>
-   <div style={{ whiteSpace: "pre-wrap", marginTop: "1rem" }}>
+    {selectedItemName === group.itemName && (
+      <div style={{ whiteSpace: "pre-wrap", marginTop: "1rem" }}>
         {costSummary}
       </div>
+    )}
 </div>
               <h2>{group.itemName} 강화 전이 통계</h2>
               <p>총 강화 시도: {group.totalAttempts}회 / 최대 강화 등급: {group.maxStar}성</p>
@@ -697,6 +785,25 @@ const isSaveDisabled = !(
 </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const avgValuesByRange = {
   "0-1":   { successAvg: "8.5%",  failureAvg: "88.5%", destroyAvg: "3.0%",  noDestroySuccessRate: "8.74%"  },
   "1-2":   { successAvg: "8.5%",  failureAvg: "88.5%", destroyAvg: "3.0%",  noDestroySuccessRate: "8.74%"  },
@@ -733,12 +840,32 @@ const avgValuesObjectByEvent = {
   },
 };
 
-
 const currentAvgValues = avgValuesObjectByEvent[eventStatus] || avgValuesByRange;
 
-// 3. TransitionTable 컴포넌트 예시 (일부 수정)
 
-function TransitionTable({ transitions, eventStatus }) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 3. TransitionTable 컴포넌트 예시 (일부 수정)
+function TransitionTable({ transitions, eventStatus}) {
+  
+
+
+
+
+
   const avgValuesMap = avgValuesObjectByEvent[eventStatus] || avgValuesByRange;
   
   // 문자열 % 제거 후 숫자 변환
