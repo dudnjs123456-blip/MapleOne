@@ -142,8 +142,18 @@ export default function MapleStarForece(data) {
   const [starforceData, setStarforceData] = useState(null);
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState("전체보기");
+
+
+
+  
+
+
+
+
   const groupedItems = useMemo(() => {
     if(!starforceData?.starforce_history) return {};
+
+
     return groupByItemAndTransitionFailMerged(starforceData.starforce_history);
   }, [starforceData]);
         // 강화 구간 및 모든 단계를 상세 출력하는 내부 함수
@@ -396,6 +406,12 @@ useEffect(() => {
 
 const [costSummary, setCostSummary] = useState("");
 const [selectedItemName, setSelectedItemName] = useState(null);
+
+  const [firstSelected, setFirstSelected] = React.useState('');
+  const [secondSelected, setSecondSelected] = React.useState('');
+
+
+
 const handleSave = (itemName, eventStatus, records) => {
   const group = displayItems.find((g) => g.itemName === itemName);
   if (!group) {
@@ -412,6 +428,11 @@ const handleSave = (itemName, eventStatus, records) => {
   console.log("PC방 할인:", pcBangDiscount);
   console.log("노작값:", noMakeValue);
   console.log("현재 이벤트 상태:", itemEventStatuses[group.itemName]);
+
+    console.log("첫 셀렉트:",firstSelected,);
+  console.log("두번째 셀렉트:", secondSelected);
+
+
 
   const destroyPreventionNum = Number(destroyPrevention);
 
@@ -440,89 +461,98 @@ const handleSave = (itemName, eventStatus, records) => {
 
   const discountSections = [15, 16, 17];
 
-  if (itemLevel === "160") {
-    console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (할인, 파괴방지 포함) ==`);
+ if (itemLevel === "160") {
+  console.log(`== 레벨 ${itemLevel} 구간별 강화 비용 계산 (할인, 파괴방지 포함) ==`);
 
-    let totalWeightedCost = 0;
-    let totalCostBeforeEventDiscount = 0;
-    let totalDestroyCount = 0;  // 파괴 횟수 누적 변수
+  let totalWeightedCost = 0;
+  let totalCostBeforeEventDiscount = 0;
+  let totalDestroyCount = 0;
 
-    const formatKoreanUnit = (number) => {
-      if (number === 0) return "0원";
-      const units = [
-        { value: 1e12, str: "조" },
-        { value: 1e8, str: "억" },
-        { value: 1e4, str: "만" },
-        { value: 1e3, str: "천" },
-      ];
-      let result = "";
-      let remainder = number;
-      units.forEach(({ value, str }) => {
-        const count = Math.floor(remainder / value);
-        if (count > 0) {
-          result += `${count}${str} `;
-          remainder -= count * value;
-        }
-      });
-      if (remainder > 0) {
-        result += `${remainder.toLocaleString()}원`;
-      } else {
-        result = result.trim() + "원";
+  const formatKoreanUnit = (number) => {
+    if (number === 0) return "0원";
+    const units = [
+      { value: 1e12, str: "조" },
+      { value: 1e8, str: "억" },
+      { value: 1e4, str: "만" },
+      { value: 1e3, str: "천" },
+    ];
+    let result = "";
+    let remainder = number;
+    units.forEach(({ value, str }) => {
+      const count = Math.floor(remainder / value);
+      if (count > 0) {
+        result += `${count}${str} `;
+        remainder -= count * value;
       }
-      return result.trim();
-    };
-
-    Object.entries(group.transitions).forEach(([fromStar, toObj]) => {
-      Object.entries(toObj).forEach(([toStar, stat]) => {
-        const sectionKey = `${fromStar}→${toStar}`;
-        const baseCost = level160Data[sectionKey]?.baseCost;
-        if (baseCost === undefined) {
-          console.warn(`level160Data에 '${sectionKey}' 구간 데이터가 없습니다.`);
-          return;
-        }
-
-        const attempts = stat.attempts || 0;
-        const fromNum = parseInt(fromStar, 10);
-        const baseCostTotal = baseCost * attempts;
-
-        const applyDiscount = discountSections.includes(fromNum) && totalDiscountRate > 0;
-        const discountedCost = applyDiscount
-          ? baseCostTotal * (1 - totalDiscountRate)
-          : baseCostTotal;
-
-        const isDestroyWeighted = weightedSections.includes(fromNum);
-        const finalCostBeforeEvent = isDestroyWeighted ? discountedCost * 3 : discountedCost;
-
-        totalCostBeforeEventDiscount += finalCostBeforeEvent;
-        if (isDestroyWeighted) totalWeightedCost += finalCostBeforeEvent;
-
-        // 파괴 횟수 누적
-        const destroyCount = stat.destroy || 0;
-        totalDestroyCount += destroyCount;
-
-        const combinedDiscountPercent = (applyDiscount ? totalDiscountRate * 100 : 0).toFixed(1);
-
-        // 구간별 상세 출력
-        console.log(`${sectionKey} 구간의 파괴 횟수: ${destroyCount}회`);
-        console.log(
-          `${sectionKey} : 시도횟수 = ${attempts}회, ` +
-          `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
-          (applyDiscount ? `할인(${combinedDiscountPercent}%) 후 비용 = ${formatKoreanUnit(discountedCost)}, ` : "") +
-          `파괴방지 적용 전 비용 = ${formatKoreanUnit(finalCostBeforeEvent)}`
-        );
-      });
     });
+    if (remainder > 0) {
+      result += `${remainder.toLocaleString()}원`;
+    } else {
+      result = result.trim() + "원";
+    }
+    return result.trim();
+  };
+
+  const fromNum = Number(firstSelected);
+  const toNum = Number(secondSelected);
+
+  // 구간 존재 여부 먼저 확인
+  let valid = true;
+  for (let i = fromNum; i < toNum; i++) {
+    if (!group.transitions[i] || !group.transitions[i][i + 1]) {
+      console.warn(`구간 데이터가 존재하지 않습니다: ${i} → ${i + 1}`);
+      valid = false;
+    }
+  }
+
+  if (!valid) {
+    console.warn("선택한 구간 내에 데이터가 없는 구간이 있어 계산을 중단합니다.");
+  } else {
+    for (let i = fromNum; i < toNum; i++) {
+      const stat = group.transitions[i][i + 1];
+      const sectionKey = `${i}→${i + 1}`;
+      const baseCost = level160Data[sectionKey]?.baseCost;
+
+      if (baseCost === undefined) {
+        console.warn(`level160Data에 '${sectionKey}' 구간 데이터가 없습니다.`);
+        continue;
+      }
+
+      const attempts = stat.attempts || 0;
+      const baseCostTotal = baseCost * attempts;
+
+      const applyDiscount = discountSections.includes(i) && totalDiscountRate > 0;
+      const discountedCost = applyDiscount
+        ? baseCostTotal * (1 - totalDiscountRate)
+        : baseCostTotal;
+
+      const isDestroyWeighted = weightedSections.includes(i);
+      const finalCostBeforeEvent = isDestroyWeighted ? discountedCost * 3 : discountedCost;
+
+      totalCostBeforeEventDiscount += finalCostBeforeEvent;
+      if (isDestroyWeighted) totalWeightedCost += finalCostBeforeEvent;
+
+      const destroyCount = stat.destroy || 0;
+      totalDestroyCount += destroyCount;
+
+      const combinedDiscountPercent = (applyDiscount ? totalDiscountRate * 100 : 0).toFixed(1);
+
+      console.log(`${sectionKey} 구간의 파괴 횟수: ${destroyCount}회`);
+      console.log(
+        `${sectionKey} : 시도횟수 = ${attempts}회, ` +
+        `베이스 비용 = ${formatKoreanUnit(baseCostTotal)}, ` +
+        (applyDiscount ? `할인(${combinedDiscountPercent}%) 후 비용 = ${formatKoreanUnit(discountedCost)}, ` : "") +
+        `파괴방지 적용 전 비용 = ${formatKoreanUnit(finalCostBeforeEvent)}`
+      );
+    }
 
     const applyEventDiscount = itemEventStatuses[group.itemName] === "샤타포스 진행중";
     let totalCostFinal = applyEventDiscount
       ? totalCostBeforeEventDiscount * 0.7
       : totalCostBeforeEventDiscount;
 
-    // 노작값 숫자 변환
     const noMakeNum = Number(noMakeValue) || 0;
-    // 파괴 횟수 곱하기 노작값 (추가 비용)
     const destroyExtraCost = totalDestroyCount * noMakeNum;
-    // 최종 비용에 파괴 추가 비용 포함
     totalCostFinal += destroyExtraCost;
 
     console.log(`\n▶ 파괴 횟수 총합: ${totalDestroyCount}회`);
@@ -538,10 +568,14 @@ const handleSave = (itemName, eventStatus, records) => {
     } else {
       console.log("\n▶ 파괴방지 구간에 가중치가 적용된 비용이 없습니다.");
     }
-  } else {
-    console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
   }
+} else {
+  console.log(`레벨 ${itemLevel} 데이터는 아직 준비되지 않았습니다.`);
+}
 };
+
+
+
   const formatMoneyUnit = (numStr) => {
     if (!numStr) return '';
 
@@ -568,7 +602,6 @@ const isSaveDisabled = !(
   itemLevel &&
   noMakeValue
 );
-
   return (
 <div style={{ maxWidth: 1600, margin: "0 auto", padding: 20, display: "block" }}>
   {/* apiKey가 있을 때 날짜 입력 UI 보여줌 */}
@@ -700,13 +733,48 @@ const isSaveDisabled = !(
     </div>
   </div>
 
+   <select value={firstSelected} onChange={e => setFirstSelected(e.target.value)}>
+    {group && (() => {
+      const fromStars = Object.keys(group.transitions).map(Number);
+      if (fromStars.length === 0) return null;
 
-<select>
+      const minFromStar = Math.min(...fromStars);
+      let allToStars = [];
+      fromStars.forEach(fromStar => {
+        const toStars = Object.keys(group.transitions[fromStar]).map(Number);
+        allToStars = allToStars.concat(toStars);
+      });
+      const maxToStar = Math.max(...allToStars);
+
+      const allSteps = [];
+      for (let i = minFromStar; i <= maxToStar; i++) {
+        allSteps.push(i);
+      }
+
+      return (
+        <optgroup key={group.itemName} label={`${group.itemName} 강화 구간`}>
+          {allSteps.map(step => (
+            <option key={step} value={step}>
+              {step} 단계
+            </option>
+          ))}
+        </optgroup>
+      );
+    })()}
+  </select>
+
+  {/* 두 번째 셀렉트 박스 */}
+<select
+  value={secondSelected}
+  onChange={e => setSecondSelected(e.target.value)}
+  disabled={!firstSelected}
+>
   {group && (() => {
     const fromStars = Object.keys(group.transitions).map(Number);
     if (fromStars.length === 0) return null;
 
-    const minFromStar = Math.min(...fromStars);
+    if (!firstSelected) return null;
+
     let allToStars = [];
     fromStars.forEach(fromStar => {
       const toStars = Object.keys(group.transitions[fromStar]).map(Number);
@@ -714,15 +782,20 @@ const isSaveDisabled = !(
     });
     const maxToStar = Math.max(...allToStars);
 
-    const allSteps = [];
-    for (let i = minFromStar; i <= maxToStar; i++) {
-      allSteps.push(i);
+    // 첫 번째 선택값 이상 단계부터 옵션 생성 (같은 값 포함)
+    const filteredSteps = [];
+    for (let i = Number(firstSelected); i <= maxToStar; i++) {
+      filteredSteps.push(i);
     }
 
     return (
-      <optgroup key={group.itemName} label={`${group.itemName} 강화 구간`}>
-        {allSteps.map(step => (
-          <option key={step} value={step}>
+      <optgroup key={group.itemName + '-second'} label={`${group.itemName} 강화 구간 - 두 번째`}>
+        {filteredSteps.map(step => (
+          <option
+            key={step}
+            value={step}
+            disabled={step === Number(firstSelected)} // 첫 번째 단계와 같으면 비활성화
+          >
             {step} 단계
           </option>
         ))}
@@ -859,13 +932,12 @@ const currentAvgValues = avgValuesObjectByEvent[eventStatus] || avgValuesByRange
 
 
 // 3. TransitionTable 컴포넌트 예시 (일부 수정)
-function TransitionTable({ transitions, eventStatus}) {
+function TransitionTable({ transitions, eventStatus ,itemName,groupedItems,group}) {
   
-
-
-
-
-
+  React.useEffect(() => {
+    console.log("groupedItems:", group);
+  }, [group]);
+  
   const avgValuesMap = avgValuesObjectByEvent[eventStatus] || avgValuesByRange;
   
   // 문자열 % 제거 후 숫자 변환
@@ -977,35 +1049,44 @@ const renderRateWithComparison = (currentStr, avgStr) => {
               <th>강화 전 등급</th><th>강화 후 등급</th><th>시도 횟수</th><th>나의성공 횟수</th><th>성공률 (%)</th><th>성공 평균값</th><th>나의실패 횟수</th><th>나의실패율 (%)</th><th>실패 평균값</th><th>나의파괴 횟수</th><th>파괴율 (%)</th><th>파괴 평균값</th><th>나만의 파없성 확률 (%)</th><th>파없성 평균</th>
             </tr>
           </thead>
-          <tbody>
-            {Object.entries(transitions).map(([fromStar, toObj]) =>
-              Object.entries(toObj).map(([toStar, stat]) => {
-                const key = `${fromStar}-${toStar}`;
-                const avgVals = avgValuesMap[key] || {};
-                const myRate = myNoDestroyRates[key] || "-";
+  <tbody>
+          {Object.entries(transitions).map(([fromStar, toObj]) =>
+            Object.entries(toObj).map(([toStar, stat]) => {
+              const fromNum = Number(fromStar);
+              const toNum = Number(toStar);
+              console.log('transitions 전체:', transitions);
+              // "마이스터링"인 경우 구간 필터링
+              if (stat.itemName === "마이스터링") {
+                if (fromNum < 17 || toNum > 19) return null; // 범위 벗어나면 렌더 제외
+              }
 
-                return (
-                  <tr key={key}>
-                    <td>{fromStar}성</td>
-                    <td>{toStar}성</td>
-                    <td>{stat.attempts}</td>
-                    <td>{stat.success}</td>
-                    <td>{renderRateWithComparison(stat.successRate, avgVals.successAvg)}</td>
-                    <td>{avgVals.successAvg !== undefined ? `${avgVals.successAvg}` : "-"}</td>
-                    <td>{stat.failure}</td>
-                    <td>{renderRateWithComparison(stat.failureRate, avgVals.failureAvg)}</td>
-                    <td>{avgVals.failureAvg !== undefined ? `${avgVals.failureAvg}` : "-"}</td>
-                    <td>{stat.destroy}</td>
-                    <td>{renderRateWithComparison(stat.destroyRate, avgVals.destroyAvg)}</td>
-                    <td>{avgVals.destroyAvg !== undefined ? `${avgVals.destroyAvg}` : "-"}</td>
-                       <td>{renderMyNoDestroyRateCell(myRate, avgVals.noDestroySuccessRate)}</td>
-                    <td>{avgVals.noDestroySuccessRate !== undefined ? `${avgVals.noDestroySuccessRate}` : "-"}</td>
-                 
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
+              // 나머지 아이템은 전 구간 렌더링
+
+              const key = `${fromStar}-${toStar}`;
+              const avgVals = avgValuesMap[key] || {};
+              const myRate = myNoDestroyRates[key] || "-";
+
+              return (
+                <tr key={key}>
+                  <td>{fromStar}성</td>
+                  <td>{toStar}성</td>
+                  <td>{stat.attempts}</td>
+                  <td>{stat.success}</td>
+                  <td>{renderRateWithComparison(stat.successRate, avgVals.successAvg)}</td>
+                  <td>{avgVals.successAvg !== undefined ? `${avgVals.successAvg}` : "-"}</td>
+                  <td>{stat.failure}</td>
+                  <td>{renderRateWithComparison(stat.failureRate, avgVals.failureAvg)}</td>
+                  <td>{avgVals.failureAvg !== undefined ? `${avgVals.failureAvg}` : "-"}</td>
+                  <td>{stat.destroy}</td>
+                  <td>{renderRateWithComparison(stat.destroyRate, avgVals.destroyAvg)}</td>
+                  <td>{avgVals.destroyAvg !== undefined ? `${avgVals.destroyAvg}` : "-"}</td>
+                  <td>{renderMyNoDestroyRateCell(myRate, avgVals.noDestroySuccessRate)}</td>
+                  <td>{avgVals.noDestroySuccessRate !== undefined ? `${avgVals.noDestroySuccessRate}` : "-"}</td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
         </table>
       </div>
       <div className="chart-area"><p style={{ textAlign: "center", color: "#666" }}>[차트 영역]</p></div>
